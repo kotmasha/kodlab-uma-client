@@ -1,0 +1,688 @@
+#This is the test script for testing existing agent endpoint
+#Test R functionality
+
+create experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create agent:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    type: default
+
+create snapshot:
+  method: POST
+  url: /UMA/object/snapshot
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+create sensor1:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor1
+    c_sid: c_sensor1
+    w: []
+    d: []
+    diag: []
+
+create sensor2:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor2
+    c_sid: c_sensor2
+    w: []
+    d: []
+    diag: []
+
+create sensor3:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor3
+    c_sid: c_sensor3
+    w: []
+    d: []
+    diag: []
+
+create sensor4:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor4
+    c_sid: c_sensor4
+    w: []
+    d: []
+    diag: []
+
+create sensor5:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor5
+    c_sid: c_sensor5
+    w: []
+    d: []
+    diag: []
+
+get attr_sensor without mid:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 400
+  message: Coming request is missing necessary fields
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+get attr_sensor sensor1:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: True
+
+get attr_sensor c_sensor1:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor1
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+get attr_sensor sensor3:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor3
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: True
+
+get attr_sensor c_sensor3:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor3
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+get attr_sensor sensor5:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor5
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: True
+
+get attr_sensor c_sensor5:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor5
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+update attr_sensor without mid:
+  method: PUT
+  url: /UMA/object/attrSensor
+  status_code: 400
+  message: Coming request is missing necessary fields
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    w: 1
+
+update attr_sensor with nothing:
+  method: PUT
+  url: /UMA/object/attrSensor
+  status_code: 400
+  message: The coming put request has nothing to update
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+
+update attr_sensor sensor1 diag:
+  method: PUT
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+  data:
+    diag: 1
+
+update mearuable sensor1 old diag:
+  method: PUT
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+  data:
+    old_diag: 2
+
+get attr_sensor sensor1 after update:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+  kwargs:
+    diag: 1
+    old_diag: 2
+    is_origin_pure: True
+
+get attr_sensor pair without mid:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 400
+  message: Coming request is missing necessary fields
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor1
+
+get attr_sensor pair sensro1 sensor1:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor1
+    attr_sensor2: sensor1
+  kwargs:
+    d: True
+    w: 0.25
+
+get attr_sensor pair c_sensro1 c_sensor1:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor1
+    attr_sensor2: c_sensor1
+  kwargs:
+    d: True
+    w: 0.25
+
+get attr_sensor pair sensro1 sensor2:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor1
+    attr_sensor2: sensor2
+  kwargs:
+    d: False
+    w: 0.25
+
+get attr_sensor pair sensro2 sensor1:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor2
+    attr_sensor2: sensor1
+  kwargs:
+    d: False
+    w: 0.25
+
+get attr_sensor pair sensro3 sensor3:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor3
+    attr_sensor2: sensor3
+  kwargs:
+    d: True
+    w: 0.25
+
+get attr_sensor pair sensro4 c_sensor3:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor4
+    attr_sensor2: c_sensor3
+  kwargs:
+    d: False
+    w: 0.25
+
+get attr_sensor pair c_sensro4 sensor5:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+  kwargs:
+    d: False
+    w: 0.25
+
+delete c_sensor3:
+  method: DELETE
+  url: /UMA/object/sensor
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: c_sensor3
+
+get attr_sensor sensor1 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: True
+
+get attr_sensor sensor3 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 404
+  message: Cannot find the sensor id
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor3
+
+get attr_sensor sensor5 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor1
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+get attr_sensor c_sensor1 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor1
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+get attr_sensor c_sensor3 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 404
+  message: Cannot find the sensor id
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor3
+
+get attr_sensor c_sensor5 after deletion:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: c_sensor5
+  kwargs:
+    diag: 0.5
+    old_diag: 0.5
+    is_origin_pure: False
+
+get attr_sensor pair sensor1 sensor1 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor1
+    attr_sensor2: sensor1
+  kwargs:
+    d: True
+    w: 0.25
+
+get attr_sensor pair c_sensor1 c_sensor1 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor1
+    attr_sensor2: c_sensor1
+  kwargs:
+    d: True
+    w: 0.25
+
+get attr_sensor pair sensor1 sensor2 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor1
+    attr_sensor2: sensor2
+  kwargs:
+    d: False
+    w: 0.25
+
+get attr_sensor pair sensor2 sensor1 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor2
+    attr_sensor2: sensor1
+  kwargs:
+    d: False
+    w: 0.25
+
+get attr_sensor pair sensor3 sensor3 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 404
+  message: Cannot find the sensor id
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor3
+    attr_sensor2: sensor3
+
+get attr_sensor pair sensor4 c_sensor3 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 404
+  message: Cannot find the sensor id
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: sensor4
+    attr_sensor2: c_sensor3
+
+get attr_sensor pair c_sensor4 sensor5 after deletion:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+  kwargs:
+    d: False
+    w: 0.25
+
+update attr_sensor pair without mid:
+  method: PUT
+  url: /UMA/object/attrSensorPair
+  status_code: 400
+  message: Coming request is missing necessary fields
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+  data:
+    w: 1
+
+update meaurable pair with nothing:
+  method: PUT
+  url: /UMA/object/attrSensorPair
+  status_code: 400
+  message: The coming put request has nothing to update
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+
+update meaurable pair c_sensor4 sensor5 w:
+  method: PUT
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+  data:
+    w: 1
+
+update meaurable pair c_sensor4 sensor5 d:
+  method: PUT
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+  data:
+    d: True
+
+get attr_sensor pair c_sensor4 sensor5 after update:
+  method: GET
+  url: /UMA/object/attrSensorPair
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor1: c_sensor4
+    attr_sensor2: sensor5
+  kwargs:
+    d: True
+    w: 1
+
+delete agent:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+
+get attr_sensor after delete agent:
+  method: GET
+  url: /UMA/object/attrSensor
+  status_code: 404
+  message: Cannot find the agent id!
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    attr_sensor_id: sensor1
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  message: Experiment=test_experiment is deleted
+  data:
+    experiment_id: test_experiment
+
+tests:
+  - create experiment
+  - create agent
+  - create snapshot
+  - create sensor1
+  - create sensor2
+  - create sensor3
+  - create sensor4
+  - create sensor5
+  - get attr_sensor without mid
+  - get attr_sensor sensor1
+  - get attr_sensor c_sensor1
+  - get attr_sensor sensor3
+  - get attr_sensor c_sensor3
+  - get attr_sensor sensor5
+  - get attr_sensor c_sensor5
+  - update attr_sensor without mid
+  - update attr_sensor with nothing
+  - update attr_sensor sensor1 diag
+  - update mearuable sensor1 old diag
+  - get attr_sensor sensor1 after update
+  - get attr_sensor pair without mid
+  - get attr_sensor pair sensro1 sensor1
+  - get attr_sensor pair c_sensro1 c_sensor1
+  - get attr_sensor pair sensro1 sensor2
+  - get attr_sensor pair sensro2 sensor1
+  - get attr_sensor pair sensro3 sensor3
+  - get attr_sensor pair sensro4 c_sensor3
+  - get attr_sensor pair c_sensro4 sensor5
+  - delete c_sensor3
+  - get attr_sensor sensor1 after deletion
+  - get attr_sensor sensor3 after deletion
+  - get attr_sensor sensor5 after deletion
+  - get attr_sensor c_sensor3 after deletion
+  - get attr_sensor c_sensor1 after deletion
+  - get attr_sensor c_sensor5 after deletion
+  - get attr_sensor pair sensor1 sensor1 after deletion
+  - get attr_sensor pair c_sensor1 c_sensor1 after deletion
+  - get attr_sensor pair sensor1 sensor2 after deletion
+  - get attr_sensor pair sensor2 sensor1 after deletion
+  - get attr_sensor pair sensor3 sensor3 after deletion
+  - get attr_sensor pair sensor4 c_sensor3 after deletion
+  - get attr_sensor pair c_sensor4 sensor5 after deletion
+  - update attr_sensor pair without mid
+  - update meaurable pair with nothing
+  - update meaurable pair c_sensor4 sensor5 w
+  - update meaurable pair c_sensor4 sensor5 d
+  - get attr_sensor pair c_sensor4 sensor5 after update
+  - delete agent
+  - get attr_sensor after delete agent
+  - delete experiment

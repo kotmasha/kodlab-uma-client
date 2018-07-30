@@ -1,0 +1,79 @@
+#This is the test script for testing existing experiment endpoint
+#Test CRUD functionality
+
+create test_experiment1:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment1 is created
+  data:
+    experiment_id: test_experiment1
+
+create test_experiment2:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment2 is created
+  data:
+    experiment_id: test_experiment2
+
+create test_experiment3:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment3 is created
+  data:
+    experiment_id: test_experiment3
+
+get world:
+  method: GET
+  url: /UMA/world
+  status_code: 200
+  message: Get world info
+  kwargs:
+    experiment_ids:
+      - test_experiment1
+      - test_experiment2
+      - test_experiment3
+
+delete test_experiment1:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  message: Experiment=test_experiment1 is deleted
+  data:
+    experiment_id: test_experiment1
+
+delete test_experiment2:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  message: Experiment=test_experiment2 is deleted
+  data:
+    experiment_id: test_experiment2
+
+delete test_experiment3:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  message: Experiment=test_experiment3 is deleted
+  data:
+    experiment_id: test_experiment3
+
+get world after delete:
+  method: GET
+  url: /UMA/world
+  status_code: 200
+  message: Get world info
+  kwargs:
+    experiment_ids: []
+
+tests:
+  - create test_experiment1
+  - create test_experiment2
+  - create test_experiment3
+  - get world
+  - delete test_experiment1
+  - delete test_experiment2
+  - delete test_experiment3
+  - get world after delete

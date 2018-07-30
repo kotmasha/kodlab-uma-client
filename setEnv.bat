@@ -1,0 +1,3 @@
+set UMA_SIM=%cd%
+set PYTHONPATH=%PYTHONPATH%;%UMA_SIM%\lib
+set PATH=%PATH%;%UMA_SIM%\bin

@@ -1,0 +1,431 @@
+create an experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create agent:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    type: default
+
+create snapshot:
+  method: POST
+  url: /UMA/object/snapshot
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+create sensor0:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor0
+    c_sid: c_sensor0
+    w: []
+    d: []
+    diag: []
+
+create sensor1:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor1
+    c_sid: c_sensor1
+    w: []
+    d: []
+    diag: []
+
+create sensor2:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor2
+    c_sid: c_sensor2
+    w: []
+    d: []
+    diag: []
+
+create sensor3:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor3
+    c_sid: c_sensor3
+    w: []
+    d: []
+    diag: []
+
+amper 1&6:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[False, True, False, False, False, False, True, False]]
+    uuid_lists: [['sensor4', 'c_sensor4']]
+
+delay 0&8:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, False, False, False, False, False, False, True, False]]
+    uuid_lists: [['sensor5', 'c_sensor5']]
+
+get snapshot 6 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sensors:
+      - ['sensor0', 'c_sensor0']
+      - ['sensor1', 'c_sensor1']
+      - ['sensor2', 'c_sensor2']
+      - ['sensor3', 'c_sensor3']
+      - ['sensor4', 'c_sensor4']
+      - ['sensor5', 'c_sensor5']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 6 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 6
+      _sensor_size_max: 6
+      _sensor2d_size: 21
+      _sensor2d_size_max: 21
+      _attr_sensor_size: 12
+      _attr_sensor_size_max: 12
+      _attr_sensor2d_size: 78
+      _attr_sensor2d_size_max: 78
+      _mask_amper_size: 42
+      _mask_amper_size_max: 42
+      _npdir_size: 84
+      _npdir_size_max: 84
+
+pruning 4 5:
+  method: POST
+  url: /UMA/object/snapshot/pruning
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals: [False, False, False, False, False, False, False, False, True, True, True, True]
+
+get snapshot 4 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sensors:
+      - ['sensor0', 'c_sensor0']
+      - ['sensor1', 'c_sensor1']
+      - ['sensor2', 'c_sensor2']
+      - ['sensor3', 'c_sensor3']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 4 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 4
+      _sensor_size_max: 6
+      _sensor2d_size: 10
+      _sensor2d_size_max: 21
+      _attr_sensor_size: 8
+      _attr_sensor_size_max: 12
+      _attr_sensor2d_size: 36
+      _attr_sensor2d_size_max: 78
+      _mask_amper_size: 20
+      _mask_amper_size_max: 42
+      _npdir_size: 40
+      _npdir_size_max: 84
+
+amper 1&3&6:
+  method: POST
+  url: /UMA/object/snapshot/amper
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    amper_lists: [[False, True, False, True, False, False, True, False, False, False, False, False]]
+    uuid_lists: [['sensor6', 'c_sensor6']]
+
+get snapshot 7 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sensors:
+      - ['sensor0', 'c_sensor0']
+      - ['sensor1', 'c_sensor1']
+      - ['sensor2', 'c_sensor2']
+      - ['sensor3', 'c_sensor3']
+      - ['sensor4', 'c_sensor4']
+      - ['sensor5', 'c_sensor5']
+      - ['sensor6', 'c_sensor6']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 7 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 7
+      _sensor_size_max: 10
+      _sensor2d_size: 28
+      _sensor2d_size_max: 55
+      _attr_sensor_size: 14
+      _attr_sensor_size_max: 20
+      _attr_sensor2d_size: 105
+      _attr_sensor2d_size_max: 210
+      _mask_amper_size: 56
+      _mask_amper_size_max: 110
+      _npdir_size: 112
+      _npdir_size_max: 220
+
+pruning 0 2 3 4 6:
+  method: POST
+  url: /UMA/object/snapshot/pruning
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals: [True, True, False, False, True, True, True, True, True, True, False, False, True, True]
+
+get snapshot 2 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sensors:
+      - ['sensor1', 'c_sensor1']
+      - ['sensor5', 'c_sensor5']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 2 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 2
+      _sensor_size_max: 10
+      _sensor2d_size: 3
+      _sensor2d_size_max: 55
+      _attr_sensor_size: 4
+      _attr_sensor_size_max: 20
+      _attr_sensor2d_size: 10
+      _attr_sensor2d_size_max: 210
+      _mask_amper_size: 6
+      _mask_amper_size_max: 110
+      _npdir_size: 12
+      _npdir_size_max: 220
+
+get sensor5 amper list:
+  method: GET
+  url: /UMA/object/sensor
+  status_code : 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor5
+  kwargs:
+    amper_list_idx: []
+
+pruning 1:
+  method: POST
+  url: /UMA/object/snapshot/pruning
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals: [False, False, True, True]
+
+pruning 0 2:
+  method: POST
+  url: /UMA/object/snapshot/pruning
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals: [True, True, False, False, True, True, False, False, False, False, False, False, False, False]
+
+get sensor4 amper list:
+  method: GET
+  url: /UMA/object/sensor
+  status_code : 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor4
+  kwargs:
+    amper_list_idx: [2]
+
+get sensor5 amper list1:
+  method: GET
+  url: /UMA/object/sensor
+  status_code : 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor5
+  kwargs:
+    amper_list_idx: [4]
+
+get sensor6 amper list:
+  method: GET
+  url: /UMA/object/sensor
+  status_code : 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor6
+  kwargs:
+    amper_list_idx: [1, 2]
+
+delete agent:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+  message: Experiment=test_experiment is deleted
+
+tests:
+  - create an experiment
+  - create agent
+  - create snapshot
+  - create sensor0
+  - create sensor1
+  - create sensor2
+  - create sensor3
+  - amper 1&6
+  - delay 0&8
+  - get snapshot 6 sensor
+  - get data size 6 sensor
+  - pruning 4 5
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+  - amper 1&6
+  - delay 0&8
+  - amper 1&3&6
+  - get snapshot 7 sensor
+  - get data size 7 sensor
+  - pruning 0 2 3 4 6
+  - get snapshot 2 sensor
+  - get data size 2 sensor
+  - get sensor5 amper list
+  - pruning 1
+  - create sensor0
+  - create sensor2
+  - create sensor3
+  - amper 1&6
+  - delay 0&8
+  - amper 1&3&6
+  - pruning 0 2
+  - get sensor4 amper list
+  - get sensor5 amper list1
+  - get sensor6 amper list
+  - delete agent
+  - delete experiment

@@ -1,0 +1,5 @@
+# This is the cluster yml setting, for connecting to corresponding UMA instance
+Cluster:
+  instance: 5
+  host: localhost
+  port: 8000

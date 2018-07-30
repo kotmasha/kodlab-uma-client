@@ -1,0 +1,591 @@
+create an experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create agent:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    type: default
+
+create snapshot:
+  method: POST
+  url: /UMA/object/snapshot
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+create sensor0:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor0
+    c_sid: c_sensor0
+    w: [[0.2, 0, 0, 0.8]]
+    d: [[True, False, False, True]]
+    diag: [0.2, 0.8]
+
+create sensor1:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor1
+    c_sid: c_sensor1
+    w: [[0.2, 0.2, 0, 0.6], [0.4, 0, 0, 0.6]]
+    d: [[False, False, False, False], [True, False, False, True]]
+    diag: [0.4, 0.6]
+
+create sensor2:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor2
+    c_sid: c_sensor2
+    w: [[0.2, 0.4, 0, 0.4], [0.4, 0.2, 0, 0.4], [0.6, 0, 0, 0.4]]
+    d: [[False, False, False, False], [False, False, False, False], [True, False, False, True]]
+    diag: [0.6, 0.4]
+
+create sensor3:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor3
+    c_sid: c_sensor3
+    w: [[0.2, 0.6, 0, 0.2], [0.4, 0.4, 0, 0.2], [0.6, 0.2, 0, 0.2], [0.8, 0, 0, 0.2]]
+    d: [[False, False, False, False], [False, False, False, False], [False, False, False, False], [True, False, False, True]]
+    diag: [0.8, 0.2]
+
+#0, 0=true
+set observe signal 0:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [True, False, False, False, False, False, False, False]
+
+delay 0, 0=true:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, False, False, False, False, False, False]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 0, 0=true:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 1]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+get sensorX 0:
+  method: GET
+  url: /UMA/object/sensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    amper_list_idx: [0]
+    amper_list_ids: [sensor0]
+    amper_list: [True, False, False, False, False, False, False, False, False, False]
+    idx: 4
+
+get snapshot 5 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    sensors:
+      - ['sensor0', 'c_sensor0']
+      - ['sensor1', 'c_sensor1']
+      - ['sensor2', 'c_sensor2']
+      - ['sensor3', 'c_sensor3']
+      - ['sensorX', 'c_sensorX']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 5 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 5
+      _sensor_size_max: 6
+      _sensor2d_size: 15
+      _sensor2d_size_max: 21
+      _attr_sensor_size: 10
+      _attr_sensor_size_max: 12
+      _attr_sensor2d_size: 55
+      _attr_sensor2d_size_max: 78
+      _mask_amper_size: 30
+      _mask_amper_size_max: 42
+      _npdir_size: 60
+      _npdir_size_max: 84
+
+pruning X:
+  method: POST
+  url: /UMA/object/snapshot/pruning
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals: [False, False, False, False, False, False, False, False, True, True]
+
+get snapshot 4 sensor:
+  method: GET
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    sensors:
+      - ['sensor0', 'c_sensor0']
+      - ['sensor1', 'c_sensor1']
+      - ['sensor2', 'c_sensor2']
+      - ['sensor3', 'c_sensor3']
+    q: 0.9
+    threshold: 0.125
+    auto_target: False
+    propagate_mask: False
+    initial_size: 0
+
+get data size 4 sensor:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    sizes:
+      _sensor_size: 4
+      _sensor_size_max: 6
+      _sensor2d_size: 10
+      _sensor2d_size_max: 21
+      _attr_sensor_size: 8
+      _attr_sensor_size_max: 12
+      _attr_sensor2d_size: 36
+      _attr_sensor2d_size_max: 78
+      _mask_amper_size: 20
+      _mask_amper_size_max: 42
+      _npdir_size: 40
+      _npdir_size_max: 84
+
+#0, 0=false
+set observe signal 1:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [False, True, False, False, False, False, False, False]
+
+delay 0, 0=false:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, False, False, False, False, False, False]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 0, 0=false:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 0, 1]
+
+#7, 7=true
+set observe signal 7:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [False, False, False, False, False, False, False, True]
+
+delay 7, 7=true:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[False, False, False, False, False, False, False, True]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 7, 7=true:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 1]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+get sensorX 7:
+  method: GET
+  url: /UMA/object/sensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    amper_list_idx: [7]
+    amper_list_ids: [c_sensor3]
+    amper_list: [False, False, False, False, False, False, False, True, False, False]
+    idx: 4
+
+#7, 7=false
+set observe signal 6:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [False, False, False, False, False, False, True, False]
+
+delay 7, 7=false:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[False, False, False, False, False, False, False, True]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 7, 7=false:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 0, 1]
+
+#0&2&4
+#0&2&4=true
+set observe signal 0&2&4:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [True, False, True, False, True, False, False, False]
+
+delay 0&2&4, 0&2&4=true:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, True, False, True, False, False, False]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 0&2&4, 0&2&4=true:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 1]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+get sensorX 0&2&4:
+  method: GET
+  url: /UMA/object/sensor
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensorX
+  kwargs:
+    amper_list_idx: [0, 2, 4]
+    amper_list_ids: [sensor0, sensor1, sensor2]
+    amper_list: [True, False, True, False, True, False, False, False, False, False]
+    idx: 4
+
+#0&2&4, 0&2&4=false
+set observe signal 0&2&5:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [True, False, True, False, False, True, False, False]
+
+delay 0&2&4, 0&2&4=false:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, True, False, True, False, False, False]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get weights after 0&2&4, 0&2&4=false:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.2]
+      - [0, 0.8]
+      - [0.2, 0.2, 0.4]
+      - [0, 0.6, 0, 0.6]
+      - [0.2, 0.4, 0.4, 0.2, 0.6]
+      - [0, 0.4, 0, 0.4, 0, 0.4]
+      - [0.2, 0.6, 0.4, 0.4, 0.6, 0.2, 0.8]
+      - [0, 0.2, 0, 0.2, 0, 0.2, 0, 0.2]
+      - [0, 0, 0, 0, 0, 0, 0, 0, 0]
+      - [0.2, 0.8, 0.4, 0.6, 0.6, 0.4, 0.8, 0.2, 0, 1]
+
+delete agent:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+  message: Experiment=test_experiment is deleted
+
+tests:
+  - create an experiment
+  - create agent
+  - create snapshot
+  - create sensor0
+  - create sensor1
+  - create sensor2
+  - create sensor3
+#0, 0=true
+  - set observe signal 0
+  - set observe signal 0
+  - delay 0, 0=true
+  - delay 0, 0=true
+  - get weights after 0, 0=true
+  - get sensorX 0
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+#0, 0=false
+  - set observe signal 1
+  - set observe signal 1
+  - delay 0, 0=false
+  - delay 0, 0=false
+  - get weights after 0, 0=false
+  - get sensorX 0
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+#7, 7=true
+  - set observe signal 7
+  - set observe signal 7
+  - delay 7, 7=true
+  - delay 7, 7=true
+  - get weights after 7, 7=true
+  - get sensorX 7
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+#7, 7=false
+  - set observe signal 6
+  - set observe signal 6
+  - delay 7, 7=false
+  - delay 7, 7=false
+  - get weights after 7, 7=false
+  - get sensorX 7
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+#0&2&4
+#0&2&4=true
+  - set observe signal 0&2&4
+  - set observe signal 0&2&4
+  - delay 0&2&4, 0&2&4=true
+  - delay 0&2&4, 0&2&4=true
+  - get weights after 0&2&4, 0&2&4=true
+  - get sensorX 0&2&4
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+#0&2&4, 0&2&4=false
+  - set observe signal 0&2&5
+  - set observe signal 0&2&5
+  - delay 0&2&4, 0&2&4=false
+  - delay 0&2&4, 0&2&4=false
+  - get weights after 0&2&4, 0&2&4=false
+  - get sensorX 0&2&4
+  - get snapshot 5 sensor
+  - get data size 5 sensor
+  - pruning X
+  - get snapshot 4 sensor
+  - get data size 4 sensor
+  - delete agent
+  - delete experiment

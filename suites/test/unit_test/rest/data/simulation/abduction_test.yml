@@ -1,0 +1,275 @@
+create an experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create an agent:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    type: default
+
+create an snapshot:
+  method: POST
+  url: /UMA/object/snapshot
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+create sensor0:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor0
+    c_sid: c_sensor0
+    d: [[True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor1:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor1
+    c_sid: c_sensor1
+    d: [[False, False, False, True], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor2:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor2
+    c_sid: c_sensor2
+    d: [[False, False, False, False], [False, False, False, True], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor3:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor3
+    c_sid: c_sensor3
+    d: [[False, False, False, True], [False, False, False, False], [False, False, False, False], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor4:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor4
+    c_sid: c_sensor4
+    d: [[False, False, False, False], [False, False, False, True], [True, False, False, False], [True, False, False, False], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+delay 0&2:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, True, False, False, False, False, False, False, False]]
+    uuid_lists: [['sensor5', 'c_sensor5']]
+
+delay 3&5&7:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[False, False, False, True, False, True, False, True, False, False, False, False]]
+    uuid_lists: [['sensor6', 'c_sensor6']]
+
+delay 1&5&10&13:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[False, True, False, False, False, True, False, False, False, False, True, False, False, True]]
+    uuid_lists: [['sensor7', 'c_sensor7']]
+
+npdirs:
+  method: POST
+  url: /UMA/simulation/npdirs
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+propagate mask:
+  method: POST
+  url: /UMA/simulation/propagateMasks
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    propagated_mask:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, True, False, True, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, False, False, True, True, False, False, True, False, False]
+
+abduction even:
+  method: POST
+  url: /UMA/simulation/abduction
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals:
+      - [True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False]
+      - [False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, False]
+
+  kwargs:
+    abduction_even:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, True, False, True, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, False, False, True, True, False, False, True, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    abduction_odd:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+
+abduction odd:
+  method: POST
+  url: /UMA/simulation/abduction
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals:
+      - [False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True]
+      - [False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False]
+
+  kwargs:
+    abduction_even:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    abduction_odd:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, True, False, True, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, False, False, True, True, False, False, True, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+
+abduction mix:
+  method: POST
+  url: /UMA/simulation/abduction
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    signals:
+      - [True, False, False, True, False, True, False, False, False, False, True, False, False, True, False, True]
+      - [False, True, True, False, False, True, False, False, False, False, False, True, True, False, True, False]
+      - [False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, True]
+      - [False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, False]
+  kwargs:
+    abduction_even:
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, False, False, True, False, False, False, False, False, False]
+    abduction_odd:
+      - [False, True, False, True, False, True, False, True, False, True, True, False, False, True, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+      - [False, True, False, True, False, True, False, True, False, True, True, False, False, True, False, False]
+      - [True, False, True, False, True, False, True, False, True, False, False, False, False, False, False, False]
+
+delete agent:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+  message: Experiment=test_experiment is deleted
+
+tests:
+  - create an experiment
+  - create an agent
+  - create an snapshot
+  - create sensor0
+  - create sensor1
+  - create sensor2
+  - create sensor3
+  - create sensor4
+  - delay 0&2
+  - delay 3&5&7
+  - delay 1&5&10&13
+  - npdirs
+  - propagate mask
+  - abduction even
+  - abduction odd
+  - abduction mix
+  - delete agent
+  - delete experiment

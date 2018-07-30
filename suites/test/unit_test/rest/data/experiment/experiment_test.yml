@@ -1,0 +1,110 @@
+#This is the test script for testing existing agent endpoint
+#Test CRUD functionality
+
+create experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create agent1:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  message: Agent=test_agent1 is created
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent1
+    type: default
+
+create agent2:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  message: Agent=test_agent2 is created
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent2
+    type: default
+
+create agent3:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  message: Agent=test_agent3 is created
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent3
+    type: qualitative
+
+get experiment:
+  method: GET
+  url: /UMA/object/experiment
+  query:
+    experiment_id: test_experiment
+  status_code: 200
+  message: Get experiment info
+  kwargs:
+    agent_ids:
+      - [test_agent1, default]
+      - [test_agent2, default]
+      - [test_agent3, qualitative]
+
+delete agent1:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  message: Agent=test_agent1 is deleted
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent1
+
+delete agent2:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  message: Agent=test_agent2 is deleted
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent2
+
+delete agent3:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  message: Agent=test_agent3 is deleted
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent3
+
+get experiment after delete:
+  method: GET
+  url: /UMA/object/experiment
+  query:
+    experiment_id: test_experiment
+  status_code: 200
+  message: Get experiment info
+  kwargs:
+    agent_ids: []
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  message: Experiment=test_experiment is deleted
+  data:
+    experiment_id: test_experiment
+
+tests:
+  - create experiment
+  - create agent1
+  - create agent2
+  - create agent3
+  - get experiment
+  - delete agent1
+  - delete agent2
+  - delete agent3
+  - get experiment after delete
+  - delete experiment
