@@ -33,7 +33,7 @@ def start_experiment(run_params):
     def dist(p, q):
         return abs(p - q)
 
-        # "Qualitative" agent parameters
+    # "Qualitative" agent parameters
 
     MOTION_PARAMS = {
         'type': 'qualitative',
@@ -69,23 +69,30 @@ def start_experiment(run_params):
     # arbitration state
     def arbiter(state):
         return bool(rnd(2))
+
     EX.construct_measurable(id_arbiter, arbiter, [bool(rnd(2))], 0, decdep=True)
 
     # intention sensors
-    id_toRT, id_toRTc = EX.register_sensor('toR')
+    id_toRT, cid_toRT = EX.register_sensor('toR')
+
     def intention_RT(state):
         return id_rt in state[id_dec][0]
+
     EX.construct_sensor(id_toRT, intention_RT, decdep=False)
 
-    id_toLT, id_toLTc = EX.register_sensor('toL')
+    id_toLT, cid_toLT = EX.register_sensor('toL')
+
     def intention_LT(state):
         return id_lt in state[id_dec][0]
+
     EX.construct_sensor(id_toLT, intention_LT, decdep=False)
 
     # failure mode for action $lt^rt$
-    id_toF, id_toFc = EX.register_sensor('toF')
+    id_toF, cid_toF = EX.register_sensor('toF')
+
     def about_to_enter_failure_mode(state):
         return state[id_toLT][0] and state[id_toRT][0]
+
     EX.construct_sensor(id_toF, about_to_enter_failure_mode, decdep=False)
 
     # add basic motion agents with arbitration
@@ -96,6 +103,7 @@ def start_experiment(run_params):
             return state[id_arbiter][0]
         else:
             return rt_decided
+
     RT = EX.construct_agent(id_rt, id_sig, action_RT, MOTION_PARAMS)
 
     def action_LT(state):
@@ -105,6 +113,7 @@ def start_experiment(run_params):
             return not (state[id_arbiter][0])
         else:
             return lt_decided
+
     LT = EX.construct_agent(id_lt, id_sig, action_LT, MOTION_PARAMS)
 
     #
@@ -174,7 +183,7 @@ def start_experiment(run_params):
         EX._AGENTS[agent_name].init()
 
     # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
-    reported_data = EX.update_state([cid_rt, cid_lt])
+    EX.update_state([cid_rt, cid_lt])
 
     # INTRODUCE DELAYED GPS SENSORS:
     for agent in [RT, LT]:
@@ -212,11 +221,9 @@ if __name__ == "__main__":
         'total_cycles':int(sys.argv[3]),
         'burn_in_cycles':int(sys.argv[2]),
         'name':sys.argv[4],
-        'host': str(sys.argv[5]),
-        'port': str(sys.argv[6]),
-        'ex_dataQ':True,
-        'agent_dataQ':True,
-        'mids_to_record':['counter','dist','sig'],
+        'ex_dataQ':False,
+        'agent_dataQ':False,
+        'mids_to_record':['count','dist','sig'],
         'Nruns':1
         }
     

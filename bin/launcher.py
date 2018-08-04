@@ -7,7 +7,7 @@ from cluster.cluster import *
 
 def check_fields(data):
     fmt = "{} field is missing from yaml file!"
-    for s in ['script', 'fun', 'iter', 'params']:
+    for s in ['script', 'func', 'Nruns', 'params']:
         if s not in data:
             raise Exception(fmt.format(s))
 
@@ -19,7 +19,7 @@ def dump_pickle(name, params):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print "Usage of launcher: launcyer.py <test.yml>"
+        print "Usage of launcher: launcher.py <test.yml>"
         exit()
 
     test_yml = sys.argv[1]
@@ -28,20 +28,23 @@ if __name__ == "__main__":
     check_fields(data)
 
     script = importlib.import_module(data['script'])
-    fun = getattr(script, data['fun'])
-    iter = int(data['iter'])
+    func = getattr(script, data['func'])
+
+    Nruns = int(data['Nruns'])
+    data['params']['Nruns']=data['Nruns']
     params = data['params']
+    #print params
     test_name = data['params']['name']
     test_yml_abs_path = os.path.join(os.getcwd(), test_yml)
-    print "name of the test: %s" % test_name
-    print "test yml file: %s" % test_yml_abs_path
-    print "script using: %s" % str(script.__name__)
-    print "fun calling from script: %s" % str(fun.__name__)
-    print "will do the test for %d times" % iter
+    print "Simulation label: %s" % test_name
+    print "Simulation yml file: %s" % test_yml_abs_path
+    print "Using script: %s" % str(script.__name__)
+    print "Function called from script: %s" % str(func.__name__)
+    print "Will execute %d simulation runs.\n" % Nruns
 
     dump_pickle(test_name, params)
     cluster = ClusterManager()
     pool = PoolManager()
-    pool.start(fun, test_yml_abs_path, iter, cluster.get_instance(), cluster.get_port(), cluster.get_host())
+    pool.start(func, test_yml_abs_path, Nruns, cluster.get_Ninstances(), cluster.get_port(), cluster.get_host())
 
-    print "all test are done"
+    print "All runs are done.\n"

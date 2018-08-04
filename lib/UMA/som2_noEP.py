@@ -188,21 +188,32 @@ class Experiment(object):
 
         # registering the decision observable
         self._ID = set()
-        self._ID.add('decision')
+        id_dec='decision'
+        id_count='counter'
+
+        self._ID.add(id_dec)
+        self._ID.add(id_count)
+
         # Dictionaries translating user-assigned names to
         # system-assigned uuids
-        self._ID_TO_DEP = {'decision': False}
+        self._ID_TO_DEP = {
+            id_dec: False,
+            id_count: False,
+            }
 
         # List of names of the experiment measurables:
         # - ordered to accommodate dependencies during the
         #   updating process;
         # - initialized to contain the trivial sensors.
-        self._MID = ['decision']
+        self._MID = [id_dec,id_count]
 
         # ID-based representation of the experiment state
         # - each entry is $key:deque$;
         # - the trivial measurables initialized:
-        self._STATE = {'decision': deque([[]], 1)}
+        self._STATE = {
+            id_dec: deque([[]], 1),
+            id_count: deque([0],1),
+            }
 
         self._EXPERIMENT_SERVICE = UMAClientWorld(self._service).add_experiment(self._EXPERIMENT_ID)
 
@@ -213,28 +224,34 @@ class Experiment(object):
         ### - the function accepts a dictionary of the same format as
         ###   $self._STATE$.
         def ex_decision(state):
-            return state['decision'][0]
+            return state[id_dec][0]
+        def cycle_count(state):
+            return 1+state[id_count][0]
 
-        self._DEFS = {'decision': ex_decision}
+        self._DEFS = {
+            id_dec: ex_decision,
+            id_count: cycle_count,
+            }
+
         self._UPDATE_CYCLE_REPORTS={}
 
     # The register function, just do id register.
     # If id is None, generate a new one, if not just add it
     # The function is NOT supposed to be used in any test file directly
-    def register(self, mid=None):
+    def register(self, id_string=None):
         """
             :param id: the id to be registered, if it is None, will generate an uuid
             :return: the id
             """
-        if mid is None:  # means the sensor is a new one, uuid will be generated
+        if id_string is None:  # means the sensor is a new one, uuid will be generated
             new_id = str(uuid.uuid4())
             self._ID.add(new_id)
             return new_id
-        elif mid in self._ID:
-            raise Exception('ID $' + str(mid) + '$ already registered -- Aborting.')
+        elif id_string in self._ID:
+            raise Exception('ID $' + str(id_string) + '$ already registered -- Aborting.')
         else:  # need to add the id. if same name provided, just override
-            self._ID.add(mid)
-            return mid
+            self._ID.add(id_string)
+            return id_string
 
     # The function for register sensor
     # If id is None, generate 2 new sensor ids
@@ -254,11 +271,11 @@ class Experiment(object):
             midc = self.register(name_comp(id_string))
         return mid, midc
 
-    def dep(self, mid):
-        try:
-            return self._ID_TO_DEP[mid]
-        except:
-            raise Exception('This id is not registered.')
+    def agentQ(self,mid):
+        return mid in self._AGENTS.keys() or name_comp(mid) in self._AGENTS.keys()
+
+    def depQ(self, mid):
+        return self._ID_TO_DEP[mid]
 
     ## Front-end query (name-based) of an experiment state variable
     def this_state(self, mid, delta=0):
@@ -327,11 +344,14 @@ class Experiment(object):
             self.construct_measurable(midc, None, [True for ind in xrange(depth + 1)], depth, decdep)
         else:
             self.construct_measurable(mid, definition, init_value, depth, decdep)
-            self.construct_measurable(midc, func_not(definition),
-                                      negate(init_value) if init_value is not None else None, depth, decdep)
+            self.construct_measurable(midc, 
+                                      func_not(definition),
+                                      negate(init_value) if init_value is not None else None, 
+                                      depth, 
+                                      decdep)
         return None
 
-    def construct_agent(self, id_agent, id_motivation, definition, decdep, params):
+    def construct_agent(self, id_agent, id_motivation, definition, params):
         """
             :param id_agent: the agent id, must provide, cannot be None
             :param id_motivation: id for phi value
@@ -343,8 +363,9 @@ class Experiment(object):
         # -------------------- Remove the old try/except block, because: -----------------------
         # if id_agent is None, getting this by throwing an exception will reduce performance, an if else check will be faster
         if id_agent in self._ID:
-            # construct and initialize new sensor
-            self.construct_sensor(id_agent, definition=definition, decdep=decdep, init_value=[False,False])
+            # construct and initialize new sensor;
+            # an agent's sensor will ALWAYS have decdep=False to ensure evaluation of the update function in the second sweep
+            self.construct_sensor(id_agent, definition=definition, decdep=False, init_value=[False,False])
             # construct new agent (Python and C++)
             try:
                 #trying to pass along type specification to the UMA core
@@ -380,11 +401,10 @@ class Experiment(object):
         # - if id of an agent, then form a decision and append to id_dec
         # - if cid of an agent, then pass
         # - if id of a measurable, update its value
-        for mid in (tmp_id for tmp_id in self._MID if self.dep(tmp_id)):
+        for mid in (tmp_id for tmp_id in self._MID if self.depQ(tmp_id) or self.agentQ(tmp_id)):
             midc = name_comp(mid)
-            agentQ = mid in self._AGENTS or midc in self._AGENTS
 
-            if agentQ:
+            if self.agentQ(mid):
                 if mid in self._AGENTS:  # if mid is an agent...
                     self._UPDATE_CYCLE_REPORTS[mid]['entering_decision_cycle']=time.clock()
                     ## agent activity set to current reading
@@ -478,20 +498,18 @@ class Experiment(object):
                     pass
 
         # At this point, there is a complete decision vector
+        # Second update sweep goes over all mids whose dep status is False.
+        # - Agent mids will ALWAYS have False dep status.
         action_signal = self.this_state(id_dec)
-        for mid in self._MID:
-            midc = name_comp(mid)
-            agentQ = mid in self._AGENTS or midc in self._AGENTS
-            depQ = self.dep(mid)
-
-            if agentQ:  
+        for mid in (tmp_id for tmp_id in self._MID if not self.depQ(tmp_id)):
+            if self.agentQ(mid):  
                 # if mid is an agent (or its star)...
                 try:  
                     # try evaluating the definition for this mid
                     self.set_state(mid, (self._DEFS[mid](self._STATE)))
                     #report final decision for mid
                     if mid in self._AGENTS:
-                        self._UPDATE_CYCLE_REPORTS[mid]['final'] = mid if self.this_state(mid) else midc
+                        self._UPDATE_CYCLE_REPORTS[mid]['final'] = mid if self.this_state(mid) else name_comp(mid)
                 except:  
                     # if no definition, set the value according to $action_signal$
                     self.set_state(mid, (mid in action_signal))
@@ -504,7 +522,6 @@ class Experiment(object):
                     pass
 
         self._UPDATE_CYCLE_REPORTS['experiment']['exiting_update_cycle']=time.clock()
-        return self._UPDATE_CYCLE_REPORTS, self._UPDATE_CYCLE_REPORTS
 
 # The snapshot class that hold the snapshot shell on python side
 class Snapshot(object):
@@ -796,7 +813,7 @@ class Agent(object):
     #  - listed sensors that are absent from the snapshot will not contribute anything to the signal
     def generate_signal(self, mid_list, token=None):
         token = ('plus' if self._ACTIVE else 'minus') if token is None else token
-        return Signal([(tmp_mid in mid_list) for tmp_mid in self._SNAPSHOTS[token]._SENSORS])
+        return Signal([(tmp_id in mid_list) for tmp_id in self._SNAPSHOTS[token]._SENSORS])
 
 
     ### Form a delayed sensor

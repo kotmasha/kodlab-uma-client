@@ -1,6 +1,6 @@
 # The yml file for sniffy, name, script and fun are must have
 
-script: UMA_sniffy_Q1
+script: sniffy_linear
 func: start_experiment
 Nruns: 5
 
@@ -10,9 +10,8 @@ params:
   burn_in_cycles: 200
   ex_dataQ: False
   agent_dataQ: False
-  name: shuang_test
+  name: simple_AT
   mids_to_record:
     - counter
     - dist
     - sig
-
