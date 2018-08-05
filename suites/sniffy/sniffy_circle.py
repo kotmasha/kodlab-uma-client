@@ -3,35 +3,30 @@ from numpy.random import randint as rnd
 from collections import deque
 #import curses
 import time
-from UMA.som2_noEP import *
+from som2_noEP import *
 import sys
 import os
 import cPickle
-from client.UMARest import *
 
-def start_experiment(run_params):
-    # System parameters
-    test_name=run_params['test_name']
-    host = run_params['host']
-    port = run_params['port']
-
+def start_experiment(run_params, test_name):
+    # Decision cycles:
+    TOTAL_CYCLES = run_params['total_cycles']
+    BURN_IN_CYCLES = run_params['burn_in_cycles']
     # Recording options:
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
-
-    # Decision cycles:
-    TOTAL_CYCLES = run_params['total_cycles']
-    BURN_IN_CYCLES = run_params['burn_in_cycles']
+                
     # Parameters and definitions
-    X_BOUND = run_params['env_length']  # length
+    X_BOUND = run_params['circumference']  # length
+    BEACON_WIDTH = run_params['beacon_width'] # width of place field centered at each position
 
     def in_bounds(pos):
         return (pos >= 0 and pos <= X_BOUND)
 
     # distance function
     def dist(p, q):
-        return abs(p - q)
+        return min(abs(p - q),abs(X_BOUND-p-q))
 
         # "Qualitative" agent parameters
 
@@ -41,7 +36,7 @@ def start_experiment(run_params):
     }
 
     # initialize a new experiment
-    EX = Experiment(test_name, UMARestService(host, port))
+    EX = Experiment(test_name)
     id_dec = 'decision'
     id_count= 'counter'
 
@@ -53,10 +48,10 @@ def start_experiment(run_params):
     # register motivation for motion agents
     # - this one is NOT dependent on agents except through the position, so
     #   it carries the default False tag.
-    id_at_targ, cid_at_targ = EX.register_sensor('atT')
+    #id_at_targ, cid_at_targ = EX.register_sensor('atT')
     id_dist = EX.register('dist')
     id_sig = EX.register('sig')
-    id_nav, id_navc = EX.register_sensor('nav')
+    id_nav, cid_nav = EX.register_sensor('nav')
 
     # register arbiter variable whose purpose is provide a hard-wired response to a conflict
     # between agents 'lt' and 'rt'.
@@ -72,20 +67,26 @@ def start_experiment(run_params):
     EX.construct_measurable(id_arbiter, arbiter, [bool(rnd(2))], 0, decdep=True)
 
     # intention sensors
-    id_toRT, id_toRTc = EX.register_sensor('toR')
+    id_toRT, cid_toRT = EX.register_sensor('toR')
+
     def intention_RT(state):
         return id_rt in state[id_dec][0]
+
     EX.construct_sensor(id_toRT, intention_RT, decdep=False)
 
-    id_toLT, id_toLTc = EX.register_sensor('toL')
+    id_toLT, cid_toLT = EX.register_sensor('toL')
+
     def intention_LT(state):
         return id_lt in state[id_dec][0]
+
     EX.construct_sensor(id_toLT, intention_LT, decdep=False)
 
     # failure mode for action $lt^rt$
-    id_toF, id_toFc = EX.register_sensor('toF')
+    id_toF, cid_toF = EX.register_sensor('toF')
+
     def about_to_enter_failure_mode(state):
         return state[id_toLT][0] and state[id_toRT][0]
+
     EX.construct_sensor(id_toF, about_to_enter_failure_mode, decdep=False)
 
     # add basic motion agents with arbitration
@@ -96,6 +97,7 @@ def start_experiment(run_params):
             return state[id_arbiter][0]
         else:
             return rt_decided
+
     RT = EX.construct_agent(id_rt, id_sig, action_RT, MOTION_PARAMS)
 
     def action_LT(state):
@@ -105,6 +107,7 @@ def start_experiment(run_params):
             return not (state[id_arbiter][0])
         else:
             return lt_decided
+
     LT = EX.construct_agent(id_lt, id_sig, action_LT, MOTION_PARAMS)
 
     #
@@ -114,7 +117,7 @@ def start_experiment(run_params):
     ## introduce agent's position
 
     # select starting position
-    START = rnd(X_BOUND + 1)
+    START = 0
 
     # effect of motion on position
     id_pos = EX.register('pos')
@@ -124,27 +127,22 @@ def start_experiment(run_params):
         diff = 0
         for t in triggers:
             diff += triggers[t] * int(state[t][0])
-        newpos = state[id_pos][0] + diff
-        if in_bounds(newpos):
-            return newpos
-        else:
-            return state[id_pos][0]
-
+        newpos = (state[id_pos][0] + diff) % X_BOUND
+        return newpos
+ 
     EX.construct_measurable(id_pos, motion, [START, START])
 
-    # generate target position
-    TARGET = START
-    while dist(TARGET, START) < X_BOUND / 8:
-        TARGET = X_BOUND / 4 + rnd(X_BOUND / 2)
-
+    # generate target position at distance at least X_BOUND/8 from START position
+    TARGET = X_BOUND/8+rnd(7*X_BOUND)/8
+ 
     # set up position sensors
-    def xsensor(m):  # along x-axis
-        return lambda state: state[id_pos][0] < m + 1
+    def xsensor(m,w):  # along x-axis
+        return lambda state: dist(state[id_pos][0],m) < w
 
     for ind in xrange(X_BOUND):
         tmp_name = 'x' + str(ind)
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
-        EX.construct_sensor(id_tmp, xsensor(ind))  # constructs the measurables associated with the sensor
+        EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
         RT.add_sensor(id_tmp)
         LT.add_sensor(id_tmp)
 
@@ -174,7 +172,7 @@ def start_experiment(run_params):
         EX._AGENTS[agent_name].init()
 
     # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
-    reported_data = EX.update_state([cid_rt, cid_lt])
+    EX.update_state([cid_rt, cid_lt])
 
     # INTRODUCE DELAYED GPS SENSORS:
     for agent in [RT, LT]:
@@ -212,12 +210,11 @@ if __name__ == "__main__":
         'total_cycles':int(sys.argv[3]),
         'burn_in_cycles':int(sys.argv[2]),
         'name':sys.argv[4],
-        'host': str(sys.argv[5]),
-        'port': str(sys.argv[6]),
-        'ex_dataQ':True,
-        'agent_dataQ':True,
-        'mids_to_record':['counter','dist','sig'],
-        'Nruns':1
+        'ex_dataQ':False,
+        'agent_dataQ':False,
+        'mids_to_record':['count','dist','sig'],
+        'Nruns':1,
+        'beacon_width':3,
         }
     
     DIRECTORY=".\\"+RUN_PARAMS['name']
