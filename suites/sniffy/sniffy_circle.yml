@@ -1,18 +1,20 @@
 # The yml file for sniffy, name, script and fun are must have
 
-script: weird
+script: sniffy_circle
 func: start_experiment
 Nruns: 5
 
 params:
-  env_length: 20
-  total_cycles: 300
-  burn_in_cycles: 200
+  SnapType: qualitative
+  AutoTarg: False
+  circumference: 20
+  beacon_width: 2
+  total_cycles: 500
+  burn_in_cycles: 400
   ex_dataQ: False
   agent_dataQ: False
-  name: weird
+  name: circle_w_nav
   mids_to_record:
     - counter
     - dist
     - sig
-

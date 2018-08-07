@@ -33,7 +33,7 @@ def start_experiment(run_params):
     def dist(p, q):
         return abs(p - q)
 
-        # "Qualitative" agent parameters
+    # "Qualitative" agent parameters
 
     MOTION_PARAMS = {
         'type': 'qualitative',
