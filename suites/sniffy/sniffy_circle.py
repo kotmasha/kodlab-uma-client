@@ -33,8 +33,7 @@ def start_experiment(run_params):
     def dist(p, q):
         return min(abs(p-q),X_BOUND-abs(p-q))
 
-        # "Qualitative" agent parameters
-
+    # agent parameters
     MOTION_PARAMS = {
         'type': SnapType,   #'qualitative',
         'AutoTarg': AutoTarg,   #False,

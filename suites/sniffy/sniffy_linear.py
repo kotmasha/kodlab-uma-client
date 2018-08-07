@@ -179,11 +179,16 @@ def start_experiment(run_params):
     # construct the motivational signal
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
-    def mot(state):
-        return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])>0
-    EX.construct_sensor(id_nav,mot,[False,False])
-    RT.add_sensor(id_nav)
-    LT.add_sensor(id_nav)
+    if MOTION_PARAMS['AutoTarg']:
+        # if auto-targeting mode is on, do nothing
+        pass
+    else:
+        # otherwise, construct and assign the motivational sensor
+        def mot(state):
+            return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])<0
+        EX.construct_sensor(id_nav,mot,[False,False])
+        RT.add_sensor(id_nav)
+        LT.add_sensor(id_nav)
 
     # -------------------------------------init--------------------------------------------
 
@@ -207,18 +212,22 @@ def start_experiment(run_params):
 
 
     # ASSIGN TARGET IF NOT AUTOMATED:
-    if not MOTION_PARAMS['AutoTarg']:
+    if MOTION_PARAMS['AutoTarg']:
+        pass
+    else:
         # SET ARTIFICIAL TARGET ONCE AND FOR ALL
         for agent in [RT,LT]:
             for token in ['plus','minus']:
                 tmp_target=agent.generate_signal([id_nav],token).value().tolist()
+                print tmp_target
+                print len(tmp_target),sum(tmp_target)
                 UMACD[(agent._ID,token)].setTarget(tmp_target)
-
+                tmp_target=UMACD[(agent._ID,token)].getTarget()['data']['target']
+                print tmp_target
+                print len(tmp_target),sum(tmp_target)
+                
         # ANOTHER UPDATE CYCLE (without action)
         EX.update_state([cid_rt,cid_lt])
-    else:
-        pass
-
 
     # -------------------------------------RUN--------------------------------------------
     recorder=experiment_output(EX,run_params)
