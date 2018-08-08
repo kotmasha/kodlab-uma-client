@@ -1,4 +1,4 @@
-from test_wrapper import *
+from client.test_wrapper import *
 import os
 
 test = test_wrapper()
