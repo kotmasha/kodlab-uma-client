@@ -172,7 +172,7 @@ def start_experiment(run_params):
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
     def mot(state):
-        return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])>0
+        return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])<0 or state[id_dist][0]==0
     EX.construct_sensor(id_nav,mot,[False,False])
     RT.add_sensor(id_nav)
     LT.add_sensor(id_nav)
@@ -182,23 +182,18 @@ def start_experiment(run_params):
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
 
+    # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
+    EX.update_state([cid_rt, cid_lt])
+
     #client data objects for the experiment
     UMACD={}
     for agent_id in EX._AGENTS:
         for token in ['plus','minus']:
             UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
-
-    # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
-    EX.update_state([cid_rt, cid_lt])
-
-    # INTRODUCE DELAYED BEACON SENSORS:
-    for agent in [RT, LT]:
-        for token in ['plus', 'minus']:
-            delay_sigs = [agent.generate_signal(['x'+str(ind)+'_'+str(wid)],token) for ind in xrange(X_BOUND) for wid in xrange(1,BEACON_WIDTH)]
-            agent.delay(delay_sigs, token)
-
     # ASSIGN TARGET IF NOT AUTOMATED:
-    if not MOTION_PARAMS['AutoTarg']:
+    if MOTION_PARAMS['AutoTarg']:
+        pass
+    else:
         # SET ARTIFICIAL TARGET ONCE AND FOR ALL
         for agent in [RT,LT]:
             for token in ['plus','minus']:
@@ -206,10 +201,15 @@ def start_experiment(run_params):
                 UMACD[(agent._ID,token)].setTarget(tmp_target)
 
         # ANOTHER UPDATE CYCLE (without action)
-        EX.update_state([cid_rt,cid_lt])
-    else:
-        pass
-   
+        EX.update_state([cid_rt,cid_lt])   
+
+
+    # INTRODUCE DELAYED BEACON SENSORS:
+    for agent in [RT, LT]:
+        for token in ['plus', 'minus']:
+            delay_sigs = [agent.generate_signal(['x'+str(ind)+'_'+str(wid)],token) for ind in xrange(X_BOUND) for wid in xrange(1,BEACON_WIDTH)]
+            agent.delay(delay_sigs, token)
+
 
     # -------------------------------------RUN--------------------------------------------
     recorder=experiment_output(EX,run_params)

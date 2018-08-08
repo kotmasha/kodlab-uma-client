@@ -185,7 +185,7 @@ def start_experiment(run_params):
     else:
         # otherwise, construct and assign the motivational sensor
         def mot(state):
-            return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])<0
+            return state[id_dist][0]<state[id_dist][1] or state[id_dist][0]==0
         EX.construct_sensor(id_nav,mot,[False,False])
         RT.add_sensor(id_nav)
         LT.add_sensor(id_nav)
@@ -195,21 +195,14 @@ def start_experiment(run_params):
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
 
+    # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
+    EX.update_state([cid_rt, cid_lt])
+
     #client data objects for the experiment
     UMACD={}
     for agent_id in EX._AGENTS:
         for token in ['plus','minus']:
             UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
-
-    # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
-    EX.update_state([cid_rt, cid_lt])
-
-    # INTRODUCE DELAYED GPS SENSORS:
-    for agent in [RT, LT]:
-        for token in ['plus', 'minus']:
-            delay_sigs = [agent.generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
-            agent.delay(delay_sigs, token)
-
 
     # ASSIGN TARGET IF NOT AUTOMATED:
     if MOTION_PARAMS['AutoTarg']:
@@ -219,15 +212,23 @@ def start_experiment(run_params):
         for agent in [RT,LT]:
             for token in ['plus','minus']:
                 tmp_target=agent.generate_signal([id_nav],token).value().tolist()
-                print tmp_target
-                print len(tmp_target),sum(tmp_target)
+                #print tmp_target
+                #print len(tmp_target),sum(tmp_target)
                 UMACD[(agent._ID,token)].setTarget(tmp_target)
-                tmp_target=UMACD[(agent._ID,token)].getTarget()['data']['target']
-                print tmp_target
-                print len(tmp_target),sum(tmp_target)
                 
         # ANOTHER UPDATE CYCLE (without action)
         EX.update_state([cid_rt,cid_lt])
+
+    # INTRODUCE DELAYED GPS SENSORS:
+    for agent in [RT, LT]:
+        for token in ['plus', 'minus']:
+            delay_sigs = [agent.generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
+            agent.delay(delay_sigs, token)
+            #tmp_target=UMACD[(agent._ID,token)].getTarget()['data']['target']
+            #print tmp_target
+            #print len(tmp_target),sum(tmp_target)
+
+
 
     # -------------------------------------RUN--------------------------------------------
     recorder=experiment_output(EX,run_params)
