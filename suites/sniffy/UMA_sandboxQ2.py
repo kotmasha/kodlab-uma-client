@@ -92,7 +92,7 @@ def start_experiment(stdscr,env_length,burn_in,agent_to_examine,delay_string):
             return state[id_arbiter][0]
         else:
             return rt_decided
-    RT=EX.construct_agent(id_rt,id_sig,action_RT,True,MOTION_PARAMS)
+    RT=EX.construct_agent(id_rt,id_sig,action_RT,MOTION_PARAMS)
 
     def action_LT(state):
         lt_decided=(id_lt in state[id_dec][0])
@@ -101,7 +101,7 @@ def start_experiment(stdscr,env_length,burn_in,agent_to_examine,delay_string):
             return not(state[id_arbiter][0])
         else:
             return lt_decided
-    LT=EX.construct_agent(id_lt,id_sig,action_LT,True,MOTION_PARAMS)
+    LT=EX.construct_agent(id_lt,id_sig,action_LT,MOTION_PARAMS)
  
     #
     ### "mapping" system

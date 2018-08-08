@@ -2,7 +2,7 @@
 
 script: UMA_sniffy_Q1
 func: start_experiment
-Nruns: 5
+Nruns: 50
 
 params:
   env_length: 20

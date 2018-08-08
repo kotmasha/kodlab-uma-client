@@ -24,6 +24,8 @@ def start_experiment(run_params):
     TOTAL_CYCLES = run_params['total_cycles']
     BURN_IN_CYCLES = run_params['burn_in_cycles']
     # Parameters and definitions
+    AutoTarg=bool(run_params['AutoTarg'])
+    SnapType=run_params['SnapType']
     X_BOUND = run_params['env_length']  # length
 
     def in_bounds(pos):
@@ -36,8 +38,8 @@ def start_experiment(run_params):
     # "Qualitative" agent parameters
 
     MOTION_PARAMS = {
-        'type': 'qualitative',
-        'AutoTarg': True,
+        'type': SnapType,   #'qualitative',
+        'AutoTarg': AutoTarg,   #False,
     }
 
     # initialize a new experiment
@@ -56,7 +58,7 @@ def start_experiment(run_params):
     id_at_targ, cid_at_targ = EX.register_sensor('atT')
     id_dist = EX.register('dist')
     id_sig = EX.register('sig')
-    id_nav, id_navc = EX.register_sensor('nav')
+    id_nav, cid_nav = EX.register_sensor('nav')
 
     # register arbiter variable whose purpose is provide a hard-wired response to a conflict
     # between agents 'lt' and 'rt'.
@@ -177,10 +179,27 @@ def start_experiment(run_params):
     # construct the motivational signal
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
+    if MOTION_PARAMS['AutoTarg']:
+        # if auto-targeting mode is on, do nothing
+        pass
+    else:
+        # otherwise, construct and assign the motivational sensor
+        def mot(state):
+            return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])<0
+        EX.construct_sensor(id_nav,mot,[False,False])
+        RT.add_sensor(id_nav)
+        LT.add_sensor(id_nav)
+
     # -------------------------------------init--------------------------------------------
 
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
+
+    #client data objects for the experiment
+    UMACD={}
+    for agent_id in EX._AGENTS:
+        for token in ['plus','minus']:
+            UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
 
     # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
     EX.update_state([cid_rt, cid_lt])
@@ -191,6 +210,24 @@ def start_experiment(run_params):
             delay_sigs = [agent.generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
             agent.delay(delay_sigs, token)
 
+
+    # ASSIGN TARGET IF NOT AUTOMATED:
+    if MOTION_PARAMS['AutoTarg']:
+        pass
+    else:
+        # SET ARTIFICIAL TARGET ONCE AND FOR ALL
+        for agent in [RT,LT]:
+            for token in ['plus','minus']:
+                tmp_target=agent.generate_signal([id_nav],token).value().tolist()
+                print tmp_target
+                print len(tmp_target),sum(tmp_target)
+                UMACD[(agent._ID,token)].setTarget(tmp_target)
+                tmp_target=UMACD[(agent._ID,token)].getTarget()['data']['target']
+                print tmp_target
+                print len(tmp_target),sum(tmp_target)
+                
+        # ANOTHER UPDATE CYCLE (without action)
+        EX.update_state([cid_rt,cid_lt])
 
     # -------------------------------------RUN--------------------------------------------
     recorder=experiment_output(EX,run_params)

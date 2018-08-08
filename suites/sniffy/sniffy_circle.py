@@ -3,40 +3,44 @@ from numpy.random import randint as rnd
 from collections import deque
 #import curses
 import time
-from som2_noEP import *
+from UMA.som2_noEP import *
 import sys
 import os
 import cPickle
+from client.UMARest import *
 
-def start_experiment(run_params, test_name):
-    # Decision cycles:
-    TOTAL_CYCLES = run_params['total_cycles']
-    BURN_IN_CYCLES = run_params['burn_in_cycles']
+def start_experiment(run_params):
+    # System parameters
+    test_name=run_params['test_name']
+    host = run_params['host']
+    port = run_params['port']
+
     # Recording options:
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
-                
+
+    # Decision cycles:
+    TOTAL_CYCLES = run_params['total_cycles']
+    BURN_IN_CYCLES = run_params['burn_in_cycles']
     # Parameters and definitions
+    AutoTarg=bool(run_params['AutoTarg'])
+    SnapType=run_params['SnapType']
     X_BOUND = run_params['circumference']  # length
     BEACON_WIDTH = run_params['beacon_width'] # width of place field centered at each position
 
-    def in_bounds(pos):
-        return (pos >= 0 and pos <= X_BOUND)
-
     # distance function
     def dist(p, q):
-        return min(abs(p - q),abs(X_BOUND-p-q))
+        return min(abs(p-q),X_BOUND-abs(p-q))
 
-        # "Qualitative" agent parameters
-
+    # agent parameters
     MOTION_PARAMS = {
-        'type': 'qualitative',
-        'AutoTarg': True,
+        'type': SnapType,   #'qualitative',
+        'AutoTarg': AutoTarg,   #False,
     }
 
     # initialize a new experiment
-    EX = Experiment(test_name)
+    EX = Experiment(test_name, UMARestService(host, port))
     id_dec = 'decision'
     id_count= 'counter'
 
@@ -55,7 +59,7 @@ def start_experiment(run_params, test_name):
 
     # register arbiter variable whose purpose is provide a hard-wired response to a conflict
     # between agents 'lt' and 'rt'.
-    id_arbiter = EX.register('ar')
+    id_arbiter = EX.register('arb')
 
     #
     ### Arbitration
@@ -119,9 +123,11 @@ def start_experiment(run_params, test_name):
     # select starting position
     START = 0
 
+    # generate target position at distance at least X_BOUND/8 from START position
+    TARGET = X_BOUND/8+rnd(7*X_BOUND)/8
+ 
     # effect of motion on position
     id_pos = EX.register('pos')
-
     def motion(state):
         triggers = {id_rt: 1, id_lt: -1}
         diff = 0
@@ -132,22 +138,20 @@ def start_experiment(run_params, test_name):
  
     EX.construct_measurable(id_pos, motion, [START, START])
 
-    # generate target position at distance at least X_BOUND/8 from START position
-    TARGET = X_BOUND/8+rnd(7*X_BOUND)/8
- 
     # set up position sensors
     def xsensor(m,w):  # along x-axis
-        return lambda state: dist(state[id_pos][0],m) < w
+        return lambda state: dist(state[id_pos][0],m)<=w
 
-    for ind in xrange(X_BOUND):
-        tmp_name = 'x' + str(ind)
-        id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
-        EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
-        RT.add_sensor(id_tmp)
-        LT.add_sensor(id_tmp)
+    for wid in xrange(1,BEACON_WIDTH):
+        for pos in xrange(X_BOUND):
+            tmp_name = 'x' + str(pos) + '_' + str(wid)
+            id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
+            EX.construct_sensor(id_tmp, xsensor(pos,wid))  # constructs the measurables associated with the sensor
+            RT.add_sensor(id_tmp)
+            LT.add_sensor(id_tmp)
 
     # distance to target
-    # - $id_distM$ has already been registerd
+    # - $id_dist$ has already been registerd
     def dist_to_target(state):
         return dist(state[id_pos][0], TARGET)
 
@@ -155,31 +159,57 @@ def start_experiment(run_params, test_name):
     EX.construct_measurable(id_dist, dist_to_target, [INIT, INIT])
 
     ## value signal for agents LT and RT
+    # $id_sig$ has already been registered
+
     # signal scales with distance to target
     rescaling = lambda r: r
-
     def sig(state):
         return rescaling(state[id_dist][0])
-        # initial value for signal:
 
+    # initial value for signal:
     INIT = rescaling(dist(START, TARGET))
     # construct the motivational signal
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
+
+    def mot(state):
+        return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])>0
+    EX.construct_sensor(id_nav,mot,[False,False])
+    RT.add_sensor(id_nav)
+    LT.add_sensor(id_nav)
 
     # -------------------------------------init--------------------------------------------
 
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
 
+    #client data objects for the experiment
+    UMACD={}
+    for agent_id in EX._AGENTS:
+        for token in ['plus','minus']:
+            UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
+
     # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
     EX.update_state([cid_rt, cid_lt])
 
-    # INTRODUCE DELAYED GPS SENSORS:
+    # INTRODUCE DELAYED BEACON SENSORS:
     for agent in [RT, LT]:
         for token in ['plus', 'minus']:
-            delay_sigs = [agent.generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
+            delay_sigs = [agent.generate_signal(['x'+str(ind)+'_'+str(wid)],token) for ind in xrange(X_BOUND) for wid in xrange(1,BEACON_WIDTH)]
             agent.delay(delay_sigs, token)
 
+    # ASSIGN TARGET IF NOT AUTOMATED:
+    if not MOTION_PARAMS['AutoTarg']:
+        # SET ARTIFICIAL TARGET ONCE AND FOR ALL
+        for agent in [RT,LT]:
+            for token in ['plus','minus']:
+                tmp_target=agent.generate_signal([id_nav],token).value().tolist()
+                UMACD[(agent._ID,token)].setTarget(tmp_target)
+
+        # ANOTHER UPDATE CYCLE (without action)
+        EX.update_state([cid_rt,cid_lt])
+    else:
+        pass
+   
 
     # -------------------------------------RUN--------------------------------------------
     recorder=experiment_output(EX,run_params)
