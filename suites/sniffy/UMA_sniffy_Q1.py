@@ -203,6 +203,8 @@ def start_experiment(run_params):
 
     recorder.close()
 
+    EX.remove_experiment()
+
     #print "%s is done!\n" % test_name
 
 
