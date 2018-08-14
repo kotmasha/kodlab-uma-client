@@ -50,12 +50,12 @@ class PoolManager:
         self.host = host
         self.nruns = Nruns
 
-        clk = time.clock()
-        self._p.map(func, self.gen_params(filename, Nruns, host, port),chunksize=1)#,chunksize=(Nruns/Ninstances)/2)
+        clk = time.time()
+        self._p.map(func, self.gen_params(filename, Nruns, host, port))#,chunksize=(Nruns/Ninstances)/2)
         self._p.close()
         self._p.join()
         print "All runs are done!\n"
-        print "Elapsed time: " + str(time.clock() - clk) + "\n"
+        print "Elapsed time: " + str(time.time() - clk) + "\n"
 
     def parameter_generator(self, idx, filename, host, port):
         info = YamlManager(filename).get_dict()
