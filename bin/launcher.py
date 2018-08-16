@@ -1,6 +1,7 @@
 # This is the launcher for UMA Simulation
 import sys
-import os
+from os import mkdir
+from shutil import rmtree
 import importlib
 import cPickle
 from cluster.cluster import *
@@ -12,7 +13,12 @@ def check_fields(data):
             raise Exception(fmt.format(s))
 
 def dump_pickle(name, params):
-    os.mkdir(name)
+    try:
+        mkdir(name)
+    except WindowsError:
+        rmtree(name)
+        mkdir(name)
+               
     preamblef = open(".\\%s\\%s.pre" % (name, name), "wb")
     cPickle.dump(params, preamblef, protocol=cPickle.HIGHEST_PROTOCOL)
     preamblef.close()

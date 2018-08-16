@@ -3,7 +3,6 @@ from collections import deque
 from itertools import *
 from numpy.random import randint as rnd
 import numpy as np
-import cPickle
 from client.UMARest import *
 
 import uuid
@@ -356,7 +355,6 @@ class Experiment(object):
             :param id_agent: the agent id, must provide, cannot be None
             :param id_motivation: id for phi value
             :param definition: definition of the agent
-            :param decdep: bool indicating whether the agent is decision dependent
             :param params: other parameters for the agent
             :return: agent if succeed, None if fail
             """
@@ -890,7 +888,7 @@ class experiment_output():
             self._preamble['agent_data_recorded']=[]
 
         #Update the preamble file
-        cPickle.dump(self._preamble,preamblef,protocol=cPickle.HIGHEST_PROTOCOL)
+        json.dump(self._preamble,preamblef)
         preamblef.close()
 
         #Designated filename for UNBUFFERED recording in binary mode
@@ -912,7 +910,8 @@ class experiment_output():
             for mid in self._ex._AGENTS.keys():
                 out_dict['agent_data_recorded'][mid]=[self._ex._UPDATE_CYCLE_REPORTS[mid][tag] for tag in self._preamble['agent_data_recorded']]
 
-        cPickle.dump(out_dict,self._outfile,protocol=cPickle.HIGHEST_PROTOCOL)
+        json.dump(out_dict,self._outfile)
+        self._outfile.write('\n')
 
 
     def close(self):
