@@ -51,12 +51,17 @@ class PoolManager:
         self.nruns = Nruns
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         clk = time.clock()
         self._p.map(func, self.gen_params(filename, Nruns, host, port),chunksize=1)
 =======
         clk = time.time()
         self._p.map(func, self.gen_params(filename, Nruns, host, port))#,chunksize=(Nruns/Ninstances)/2)
 >>>>>>> master
+=======
+        clk = time.time()
+        self._p.map(func, self.gen_params(filename, Nruns, host, port))#,chunksize=(Nruns/Ninstances)/2)
+>>>>>>> abc16ee43f8acdadad7bd560547029c54069cf88
         self._p.close()
         self._p.join()
         print "All runs are done!\n"
