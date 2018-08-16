@@ -234,6 +234,10 @@ class Experiment(object):
 
         self._UPDATE_CYCLE_REPORTS={}
 
+    # This function is removing the experiment object in core, called when the experiment is no-longer used
+    def remove_experiment(self):
+        UMAClientWorld(self._service).delete_experiment(self._EXPERIMENT_ID)
+
     # The register function, just do id register.
     # If id is None, generate a new one, if not just add it
     # The function is NOT supposed to be used in any test file directly

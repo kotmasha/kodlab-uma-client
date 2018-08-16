@@ -3,6 +3,7 @@ import sys
 import cPickle
 import numpy as np
 import matplotlib as mpl
+import os
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -46,15 +47,14 @@ def get_pickles(infile):
 #
 
 NAME=sys.argv[1]
-DIRECTORY=".\\"+NAME+"\\"
 
-preamble_file_name=DIRECTORY+NAME+".pre"
+preamble_file_name = os.path.join(NAME, NAME+".pre")
 preamblef=open(preamble_file_name,'rb')
 preamble=cPickle.load(preamblef)
 preamblef.close()
 
 RUN_NAME=lambda i: NAME+"_"+str(i)
-input_file_name=lambda i: DIRECTORY+RUN_NAME(i)+".dat"
+input_file_name=lambda i: os.path.join(NAME, RUN_NAME(i) + ".dat")
 NRUNS=preamble['Nruns']
 
 
