@@ -66,8 +66,21 @@ class UMARestService:
         #self._log.write("(" + str(r.status_code) + ") " + str(r.json()['message']) + '\n')
         return r.json()
 
-    def delete(self):
-        pass
+    def delete(self, uri, data):
+        uri = self._base_url + uri
+        try:
+            r = requests.delete(uri, data=json.dumps(data), headers=self._headers)
+        except:
+            #self._log.write("Errors while doing put request " + uri + '\n')
+            return None
+        if r.status_code >= 400 and r.status_code < 500:
+            #self._log.write("Client Error(" + str(r.status_code) + "): " + str(r.json()['message'] + '\n'))
+            return None
+        if r.status_code >= 500:
+            #self._log.write("Server Error(" + str(r.status_code) + ") please check server log" + '\n')
+            return None
+        #self._log.write("(" + str(r.status_code) + ") " + str(r.json()['message']) + '\n')
+        return r.json()
 
 class UMAClientObject:
     def __init__(self, service):
@@ -90,6 +103,13 @@ class UMAClientWorld(UMAClientObject):
             return None
         else:
             return UMAClientExperiment(experiment_id, self.get_service())
+
+    def delete_experiment(self, experiment_id):
+        data = {'experiment_id': experiment_id}
+        result = self._service.delete('/UMA/object/experiment', data)
+        if not result:
+            print "delete experiment=%s failed!" % experiment_id
+            return None
 
 class UMAClientExperiment(UMAClientObject):
     def __init__(self, experiment_id, service):
