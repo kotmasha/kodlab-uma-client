@@ -8,20 +8,23 @@ params:
   name: mouse_QAT
   ex_dataQ: False
   agent_dataQ: False
-  total_cycles: 500
-  burn_in_cycles: 400
+  total_cycles: 400
+  burn_in_cycles: 200
   SnapType: qualitative
   AutoTarg: True
-  xbounds: "(0,20)"
-  ybounds: "(0,20)"
+  xbounds: "(0,40)"
+  ybounds: "(0,40)"
   out_of_bounds: "lambda x: False"
-  cheeseNum: 3
+  training_cheesesPerView: 1.5
+  training_nibbles: 50
+  training_nibbleDist: 3
+  cheesesPerView: 1.5
   nibbles: 50
-  nibbleDist: 2
+  nibbleDist: 3
   viewportSize: 5
   step_prob: 5
   mids_to_record:
     - counter
-    - pos
-    - direction
-    - cheeses
+    - pos_out
+    - dir_out
+    - che_out

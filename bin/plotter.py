@@ -1,6 +1,6 @@
 from __future__ import division
 import sys
-import cPickle
+import json
 import numpy as np
 import matplotlib as mpl
 import os
@@ -35,11 +35,13 @@ from matplotlib import cm
 #--------------------------------------------------------------------------------------
 
 def get_pickles(infile):
-    try:
-        while True:
-            yield cPickle.load(infile)
-    except EOFError:
-        pass
+    for item in infile:
+        yield json.loads(item)
+#    try:
+#        while True:
+#            yield cPickle.load(infile)
+#    except EOFError:
+#        pass
 
 
 #
@@ -50,7 +52,7 @@ NAME=sys.argv[1]
 
 preamble_file_name = os.path.join(NAME, NAME+".pre")
 preamblef=open(preamble_file_name,'rb')
-preamble=cPickle.load(preamblef)
+preamble=json.load(preamblef)
 preamblef.close()
 
 RUN_NAME=lambda i: NAME+"_"+str(i)

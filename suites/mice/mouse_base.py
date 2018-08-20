@@ -55,6 +55,9 @@ class icomplex(object):
     def __abs__(self):
         return (self*self.conj()).real
 
+    def ellone(self):
+        return abs(self.real)+abs(self.imag)
+
     def __complex__(self):
         return complex(self.real,self.imag)
 
@@ -88,6 +91,7 @@ West=icomplex(-1,0)
 East=icomplex(1,0)
 Origin=icomplex(0,0)
 DIRS=[North,East,South,West]
+REL_DIRS={'fd':East,'bk':West,'lt':North,'rt':South}
 
 #arena base class
 class Arena_base():
@@ -96,7 +100,7 @@ class Arena_base():
         self._ybounds=ybounds #is a tuple of the form (ymin,ymax)
         self._objects={}
         self._oob=out_of_bounds #a function accepting an icomplex position and returning Boolean
-        self._map=None
+        self._map=np.zeros((xbounds[1]-xbounds[0],ybounds[1]-ybounds[0]))
         self._ax=None
         self._fig=None
         self._cheeses = []
@@ -116,24 +120,20 @@ class Arena_base():
             return sum([self._objects[objtag]._rescaling[attributeName](pos-self._objects[objtag]._pos) for objtag in self._objects])
         return sum([self._objects[objtag]._rescaling[attributeName](abs(self._objects[objtag]._pos-pos)) for objtag in self._objects])
 
-    def elevGradient(self,pos):
-        return self.attrCalc(pos,'elevationGradient')
-
     def addMouse(self,tag,pos,attributes,viewports={}):
         self._objects[tag]=mouse(self,tag,pos,attributes,viewports)
         #self._objects.append(mouse(self,tag,pos,attributes,viewports))
 
-    def addRandomMouse(self,tag,viewsize=5):
+    def addRandomMouse(self,tag,viewsize=5,viewports={}):
         mouseAttr={'viewSize':viewsize}
-        mouseViewPort={}
         mouseAttr['direction']=[North,West,South,East][rnd(4)]
         mouse_start_pos = icomplex(rnd(self._xbounds[1]-self._xbounds[0]),rnd(self._ybounds[1]-self._ybounds[0]))
-        self.addMouse(tag,mouse_start_pos,mouseAttr,mouseViewPort)
+        self.addMouse(tag,mouse_start_pos,mouseAttr,viewports)
 
-    def addRandomMice(self,how_many,viewsize=5):
+    def addRandomMice(self,how_many,viewsize=5,viewports={}):
         # construct x random mice
         for ind in xrange(how_many):
-            self.addRandomMouse('mus'+str(ind+1),viewsize)
+            self.addRandomMouse('mus'+str(ind+1),viewsize,viewports)
 
     def addCheese(self,tag,pos,params):
         self._objects[tag]=cheese(self,tag,pos,params)
@@ -151,11 +151,7 @@ class Arena_base():
             self.addRandomCheese(ind+1,params)
 
     def getMaxElev(self):
-        maximum = 0
-        for i in self._map:
-            for j in i:
-                maximum = max(maximum,j)
-        return maximum
+        return np.amax(self._map)
 
     def getMice(self,tag='all'):
         if tag=='all':
@@ -169,23 +165,19 @@ class Arena_base():
         else:
             raise Exception('No objects with tag \''+str(tag)+'\' in arena.\n\n')
 
-    def update_objs(self,liszt):
+    def update_objs(self,tup):
         for objtag in self._objects:
-            self._objects[objtag].update(liszt)
-
-    def updatemap(self,attributeName):
-        self._map = np.zeros((self._xbounds[1]-self._xbounds[0]+1,self._ybounds[1]-self._ybounds[0]+1))
-        for x in xrange (0,self._xbounds[1]-self._xbounds[0]+1):
-            for y in xrange (0,self._ybounds[1]-self._xbounds[0]+1):
-                self._map[y][x]=self.attrCalc(icomplex(x,y),attributeName)
+            self._objects[objtag].update(tup)
         
     def generateHeatmap(self,attributeName):
-        self._map = np.zeros((self._xbounds[1]-self._xbounds[0]+1,self._ybounds[1]-self._ybounds[0]+1))
-        for x in xrange (0,self._xbounds[1]-self._xbounds[0]+1):
-            for y in xrange (0,self._ybounds[1]-self._xbounds[0]+1):
+        for x in xrange (0,self._xbounds[1]-self._xbounds[0]):
+            for y in xrange (0,self._ybounds[1]-self._xbounds[0]):
                 self._map[y][x]=self.attrCalc(icomplex(x,y),attributeName)
         self._fig, self._ax = plt.subplots(1)
         self._fig.suptitle('Mouse experiment, cycle No. '+str(self._misc),fontsize=16)
+        self._ax.xaxis.set_ticks(-0.5+np.arange(self._xbounds[0],self._xbounds[1]+2,5))
+        self._ax.yaxis.set_ticks(-0.5+np.arange(self._ybounds[0],self._ybounds[1]+2,5))
+        self._ax.tick_params(labelbottom=False,labelleft=False)
         self._ax.imshow(self._map, cmap = 'Spectral', vmin = -1, vmax = self.getMaxElev())
         for objtag in self._objects.keys():
             obj=self._objects[objtag]
@@ -202,10 +194,12 @@ class Arena_base():
 
     def updateHeatmapFull(self,attributeName):
         self._ax.clear()
-        self._map = np.zeros((self._xbounds[1]-self._xbounds[0]+1,self._ybounds[1]-self._ybounds[0]+1))
-        for x in xrange (0,self._xbounds[1]-self._xbounds[0]+1):
-            for y in xrange (0,self._ybounds[1]-self._xbounds[0]+1):
+        for x in xrange (0,self._xbounds[1]-self._xbounds[0]):
+            for y in xrange (0,self._ybounds[1]-self._xbounds[0]):
                 self._map[y][x]=self.attrCalc(icomplex(x,y),attributeName)
+        self._ax.xaxis.set_ticks(-0.5+np.arange(self._xbounds[0],self._xbounds[1]+2,5))
+        self._ax.yaxis.set_ticks(-0.5+np.arange(self._ybounds[0],self._ybounds[1]+2,5))
+        self._ax.tick_params(labelbottom=False,labelleft=False)
         self._ax.imshow(self._map, cmap = 'Spectral', vmin = -1, vmax = self.getMaxElev())
         for objtag in self._objects.keys():
             obj=self._objects[objtag]
@@ -250,7 +244,7 @@ class obj(object):
             raise Exception('Object position must be of type icomplex')
         self._attr={}
 
-    def update(self,liszt=[False,False,False,False,False]):
+    def update(self,command=(False,False,False,False,False)):
         return None
 
     def remove(self):
@@ -260,34 +254,70 @@ class obj(object):
 class mouse(obj):
     def __init__(self,ar,tag,pos,attributes,viewport={}):
         obj.__init__(self,ar,'mouse',tag,pos)
-        self._attr = attributes 
-        self._viewport = viewport
-        self._dFunc = lambda x: pow(4,1+x.real/abs(x))#direction function, input is a gradient 
+        self._attr=attributes # the attribute 'viewSize' is assumed to be present, and non-negative int-valued.
+        # create viewports for different numerical attributes
+        self._viewport={}
+        for item in viewport:
+            try:
+                #self._viewport[item]=np.zeros((attributes['viewSize']*2+1,attributes['viewSize']*2+1))
+                self._viewport[item]={}
+                self._viewport[item]['data']=np.zeros((attributes['viewSize']*2+1,attributes['viewSize']*2+1))
+                self._viewport[item]['fig'],self._viewport[item]['ax']=plt.subplots(1)
+                ax=self._viewport[item]['ax']
+                ax.tick_params(labelbottom=False,labelleft=False)
+                ax.xaxis.set_ticks(-0.5+np.arange(0,2*self._attr['viewSize']+2,1))
+                ax.yaxis.set_ticks(-0.5+np.arange(0,2*self._attr['viewSize']+2,1))
+                #self.updateViewport(attributeName)
+                self._viewport[item]['map']=ax.imshow(
+                    self._viewport[item]['data'],
+                    cmap = 'Spectral',
+                    vmin = -1,
+                    vmax = self._ar.getMaxElev(),
+                    animated=True,
+                    )
+                #marking the mouse in the viewport
+                ax.add_patch(patches.Rectangle((self._attr['viewSize']-0.5,self._attr['viewSize']-0.5),1,1,color=(0.0,0.0,0.0)))
+                #marking the mouse pose in the viewport
+                ax.arrow(self._attr['viewSize'],self._attr['viewSize'],0,1,head_width=0.3, head_length=0.6)
+                #drawing the gradient in the viewport
+                self._viewport[item]['gradient']=ax.arrow(self._attr['viewSize'],self._attr['viewSize'],(self._ar.attrCalc(self._pos,item+'Gradient')*complex(0,1)/self._attr['direction'].convert()).real,(self._ar.attrCalc(self._pos,item+'Gradient')*complex(0,1)/self._attr['direction'].convert()).imag,color='r',head_width=0.3, head_length=0.6)
+                #textboxes in the viewport
+                boxprops=dict(boxstyle='round',facecolor='white')
+                self._viewport[item]['ltbox']=ax.text(0.05,0.475,max([ind for ind in xrange(18) if self.angle(ind,'lt')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
+                self._viewport[item]['bkbox']=ax.text(0.475,0.05,max([ind for ind in xrange(18) if self.angle(ind,'bk')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
+                self._viewport[item]['rtbox']=ax.text(0.9,0.475,max([ind for ind in xrange(18) if self.angle(ind,'rt')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
+                self._viewport[item]['fdbox']=ax.text(0.475,0.9,max([ind for ind in xrange(18) if self.angle(ind,'fd')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
+                ax.invert_yaxis()
+            except KeyError:
+                raise('\n\n===> Mouse must have a \"viewSize\" attribute.\n\n')
 
-    def copy_obj(self,arena):
-        return mouse(arena,self._tag,self._pos,self._attr,self._viewport)
+    def update(self,command=(False,False,False,False,False)):
+        return self.move(command)
 
-    def moveForward(self):
-        newp =self._pos + self._attr['direction']
-        if newp.real>self._ar._xbounds[1] or newp.real<self._ar._xbounds[0] or newp.imag>self._ar._ybounds[1] or newp.imag<self._ar._ybounds[0]:
-            return False
+    def move(self,command=(False,False,False,False,False)):
+        # assume command is a Boolean tuple of the form:
+        fd,bk,lt,rt,arb=command
+        response_step=False
+        response_turn=False
+        if arb:
+            response_step=self.step(fd,bk)
         else:
-            self._pos=newp
-            return True
-    
-    def moveBackwards(self):
-        newp =self._pos - self._attr['direction']
-        if newp.real>self._ar._xbounds[1] or newp.real<self._ar._xbounds[0] or newp.imag>self._ar._ybounds[1] or newp.imag<self._ar._ybounds[0]:
-            return False
+            response_turn=self.turn(lt,rt)
+        return response_step and response_turn # report whether or not the move suceeded
+
+    def step(self,fwd,bck):
+        # assume fwd and bck are boolean
+        newpos=self._pos+self._attr['direction']*((1 if fwd else 0)+(-1 if bck else 0))
+        if self._ar.inBounds(newpos):
+            self._pos=newpos
+            return True # move succeeded
         else:
-            self._pos=newp
-            return True
+            return False # move did not succeed
 
-    def turnLeft(self):
-        self._attr['direction'] *= North
-
-    def turnRight(self):
-        self._attr['direction'] *= South
+    def turn(self,lt,rt):
+        # assume lt and rt are boolean
+        self._attr['direction']=self._attr['direction']*(North if lt else 1)*(South if rt else 1)
+        return True # turn move always succeeds
 
     def teleport(self,posn,pose):
         # set mouse position, if legal
@@ -302,93 +332,39 @@ class mouse(obj):
         else:
             raise Exception('Invalid mouse teleport.\n')
 
-    def calculate_cos_grad(self,attributeName):
-        grad=self._ar.attrCalc(self._pos,attributeName+'Gradient')
-        posec=complex(self._attr['direction'].real,-self._attr['direction'].imag)
-        return ((grad/abs(grad))*posec).real
+    def worldPos(self,v):
+        # switch from viewport coordinates to world coordinates
+        # assuming v.real and v.imag are between 0 and 2*self._attr['viewSize']
+        loc=v-icomplex(self._attr['viewSize'],self._attr['viewSize'])
+        return self._pos+loc*(South*self._attr['direction'])
 
-    def originViewport(self):#finding the actual arena coordinates of the origin of the mouse's vision
-        baseCorner = icomplex(self._attr['viewSize'],self._attr['viewSize'])#the top right corner in the mouse's vision relative to the mouse
-        botL = baseCorner*North*self._attr['direction']+self._pos #bottom left corner
-        return botL
+    def viewportPos(self,pos):
+        # switch from global coordinates to local coordinates relative to mouse position and pose
+        # pos is assumed to be of type icomplex.
+        return (pos-self._pos)*North*self._attr['direction'].conj()
 
-    def updateViewport(self, attribute): #updates 'Viewport'['smell'] in _attr
-        if not(attribute in self._viewport):
-            self._viewport[attribute] = np.zeros((self._attr['viewSize']*2+1,self._attr['viewSize']*2+1))
-        origin = self.originViewport()
-        if self._pos.real>self._attr['viewSize']+self._ar._xbounds[0] and self._pos.real<self._ar._xbounds[1]-self._attr['viewSize']and self._pos.imag>self._attr['viewSize']+self._ar._ybounds[0] and self._pos.imag<self._ar._ybounds[1]-self._attr['viewSize']:#checking if some parts of the viewport are outside of arena, if there are standrdizes them
-            for x in xrange (0,self._attr['viewSize']*2+1):
-                for y in xrange (0, self._attr['viewSize']*2+1):
-                    self._viewport[attribute][y][x]=self._ar.attrCalc(origin+icomplex(x,y)*South*self._attr['direction'],attribute)
-        else:
-            for x in xrange (0,self._attr['viewSize']*2+1):
-                for y in xrange (0, self._attr['viewSize']*2+1):
-                    p=origin+icomplex(x,y)*South*self._attr['direction'] #temporeraly saving the coordinates of the point x,y
-                    if p.real<self._ar._xbounds[0]or p.real>self._ar._xbounds[1]or p.imag>self._ar._ybounds[1]or p.imag<self._ar._ybounds[0]:
-                        self._viewport[attribute][y][x]=-1
-                    else:
-                        self._viewport[attribute][y][x]=self._ar.attrCalc(p,attribute)
-    
-    def generateHeatmap(self,attributeName):
-        self.updateViewport(attributeName)
-        self._figure, self._axes = plt.subplots(1)
-        self._axes.imshow(self._viewport[attributeName], cmap = 'Spectral',vmin = -1, vmax = self._ar.getMaxElev())
-        self._axes.add_patch(patches.Rectangle((self._attr['viewSize']-0.5,self._attr['viewSize']-0.5),1,1,color=(0.0,0.0,0.0)))
-        self._axes.arrow(self._attr['viewSize'],self._attr['viewSize'],0,1,head_width=0.3, head_length=0.6)
-        self._axes.arrow(self._attr['viewSize'],self._attr['viewSize'],(self._ar.attrCalc(self._pos,attributeName+'Gradient')*complex(0,1)/self._attr['direction'].convert()).real,(self._ar.attrCalc(self._pos,attributeName+'Gradient')*complex(0,1)/self._attr['direction'].convert()).imag,color='r',head_width=0.3, head_length=0.6)
-        self._axes.invert_yaxis()
-    
-    def updateHeatmapFull(self,attributeName):
-        self.updateViewport(attributeName)
-        self._axes.clear()
-        self._axes.imshow(self._viewport[attributeName], cmap = 'Spectral',vmin = -1, vmax = self._ar.getMaxElev())
-        self._axes.add_patch(patches.Rectangle((self._attr['viewSize']-0.5,self._attr['viewSize']-0.5),1,1,color=(0.0,0.0,0.0)))
-        self._axes.arrow(self._attr['viewSize'],self._attr['viewSize'],0,1,head_width=0.3, head_length=0.6)
-        self._axes.arrow(self._attr['viewSize'],self._attr['viewSize'],(self._ar.attrCalc(self._pos,attributeName+'Gradient')*complex(0,1)/self._attr['direction'].convert()).real,(self._ar.attrCalc(self._pos,attributeName+'Gradient')*complex(0,1)/self._attr['direction'].convert()).imag,color='r',head_width=0.3, head_length=0.6)                                                               
-        self._axes.invert_yaxis()  
+    def updateViewport(self, attribute): # updates the viewport corresponding to a given attribute
+        # update the viewport:
+        vp=lambda x,y,p: self._ar.attrCalc(p,attribute) if self._ar.inBounds(p) else -1
+        self._viewport[attribute]['data']=[[vp(x,y,self.worldPos(icomplex(x,y))) for x in xrange(2*self._attr['viewSize']+1)] for y in xrange(2*self._attr['viewSize']+1)]
+        self._viewport[attribute]['map'].set_data(self._viewport[attribute]['data'])
+        self._viewport[attribute]['map'].autoscale()
+        
+        # update the gradient:
+        self._viewport[attribute]['gradient'].remove()
+        self._viewport[attribute]['gradient']=self._viewport[attribute]['ax'].arrow(self._attr['viewSize'],self._attr['viewSize'],(self._ar.attrCalc(self._pos,attribute+'Gradient')*complex(0,1)/self._attr['direction'].convert()).real,(self._ar.attrCalc(self._pos,attribute+'Gradient')*complex(0,1)/self._attr['direction'].convert()).imag,color='r',head_width=0.3, head_length=0.6)
 
-    def semi_update(self, liszt=[False,False,False,False,False]):#a list of boolean values assigned by the agents (FD, BK, RT, LT , arbTop) 
-        new_pos = self._pos
-        new_dir = self._attr['direction']
-        if liszt[0] and not(liszt[1] or liszt[2] or liszt[3]):
-            new_pos = self._pos + self._attr['direction']
-        elif liszt[1] and not(liszt[0] or liszt[2] or liszt[3]):
-            new_pos = self._pos - self._attr['direction'] 
-        elif liszt[2] and not(liszt[1] or liszt[0] or liszt[3]):
-            new_dir = self._attr['direction']  * icomplex(0,1)
-        elif liszt[3] and not(liszt[1] or liszt[2] or liszt[0]):
-            new_dir = self._attr['direction']  * icomplex(0,-1)
-        elif liszt[0] and liszt[1]:
-            return self.semi_update([False,False,liszt[2],liszt[3],liszt[4]])
-        elif liszt[3] and liszt[2]:
-            return self.semi_update([liszt[0],liszt[1],False,False,liszt[4]])
-        elif ((liszt[0] or liszt[1]) and (liszt[2] or liszt[3])):
-            if liszt[4]:
-                if liszt[0]:
-                    new_pos = self._pos + self._attr['direction']
-                else:
-                    new_pos = self._pos - self._attr['direction']
-            else:
-                if liszt[2]:
-                    new_dir = self._attr['direction']  * icomplex(0,1)
-                else:
-                    new_dir = self._attr['direction']  * icomplex(0,-1)
-        if self._ar.inBounds(new_pos):
-            return new_pos,new_dir
-        else:
-            return self._pos,self._attr['direction']
+        # update the text boxes:
+        self._viewport[attribute]['ltbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'lt')]))
+        self._viewport[attribute]['bkbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'bk')]))
+        self._viewport[attribute]['rtbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'rt')]))
+        self._viewport[attribute]['fdbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'fd')]))
 
-    def update(self, liszt=[False,False,False,False,False]):
-        new_pos,new_dir = self.semi_update(liszt)
-        self._pos = new_pos
-        self._attr['direction'] = new_dir                    
 
-                                                   
+    #-----------------------------measurements---------------------------------
 
-    #-----------------------------sensors---------------------------------
-    
-    def gradient(self): #gradient relative to the direction that the mouse is looking
-        return self._ar.attrCalc(self._pos,'elevationGradient')/self._attr['direction'].convert()*complex(0,1)
+    def calculate_gradient(self,attributeName):
+        return self._ar.attrCalc(self._pos,attributeName+'Gradient')
 
     def elevation(self): #elevation of mouse
         return self._ar.attrCalc(self._pos,'elevation')
@@ -400,16 +376,19 @@ class mouse(obj):
                 Sum+=y
         return Sum/pow(self._attr['viewSize']*2+1,2)
 
-    #------------------------direction senosrs----------------------------  
-    def DS(self,ind,direction):
-        gradient = self.gradient()/direction.convert()
-        return self._dFunc(gradient)>= ind
-    
-    #-------------------------length sensors----------------------
+    def calculate_cos_grad(self,attribute):
+        # assuming x will the gradient of the elevation landscape, of type complex, the cosine of the angle between x and the relative pose:
+        cos=lambda v: 0 if abs(v)==0 else (v*self._attr['direction'].conj().convert()).real/abs(v)
+        return cos(self.calculate_gradient(attribute))        
 
-    def LS(self,ind,direction):
-        gradient = self.gradient()/direction.convert()
-        return gradient.real>=ind
+    def angle(self,ind,dirn):
+        # assuming dirn will be 'fd'/'bk'/'lt'/'rt' wrt the pose vector:
+        relposec=(REL_DIRS[dirn]*self._attr['direction']).conj().convert()
+        # assuming x will the gradient of the elevation landscape, of type complex, the cosine of the angle between x and the relative pose:
+        cos=lambda v: 0 if abs(v)==0 else (v*relposec).real/abs(v)
+        # rescaling function to be applied to the cosine of the angle between grad and dirn:
+        rescaling=lambda x: pow(4.,1.+x)
+        return rescaling(cos(self.calculate_gradient('elevation')))>=ind
 
 #cheese class:
 class cheese(obj):
@@ -419,9 +398,6 @@ class cheese(obj):
         self._rescaling['elevationGradient']=lambda x: -10/25*np.exp(-abs(x)/100)*2*complex(x.real,x.imag)
         self._params = params # params is a dictionary of initialization parmeters
         self._attr={'counter':0}
-      
-    def copy_obj(self,arena):
-        return cheese(arena,self._tag,self._pos,self._params)
 
     def update(self,liszt=[False,False,False,False,False]):
         nibbleP=False
@@ -444,41 +420,53 @@ class cheese(obj):
         
                 
 def main():
-    xbounds = 0 , 40
-    ybounds = 0, 40
-    arena = Arena_base(xbounds, ybounds, [])
-    arena.addRandomCheeses(5)
-    arena.addRandomMouse('mus',viewsize=5)
+    plt.ion()
+    xbounds = 0,20
+    ybounds = 0,20
+    arena = Arena_base(xbounds, ybounds)
+    cheeseParams={
+        'nibbles':2,
+        'nibbleDist':1,
+        }
+    arena.addRandomCheeses(5,cheeseParams)
+    arena.addRandomMouse('mus',viewports={'elevation'})
     arena.generateHeatmap('elevation')
-    arena._objects['mus'].generateHeatmap('elevation')
+    #arena._objects['mus'].generateHeatmap('elevation')
+    arena._objects['mus'].updateViewport('elevation')
     arena._fig.show()
-    arena._objects['mus']._figure.show()
-    userInput = raw_input("what would you like to do now? w,a,s,d or st to stop")
+    arena._objects['mus']._viewport['elevation']['fig'].canvas.draw()
     mouse = arena.getMice('mus')
-    print mouse
-    while userInput != 'st':
-        lenObj = len(arena._objects.keys())
-        if userInput == 'w':
-            mouse.moveForward()
-        elif userInput == 's':
-            mouse.moveBackwards()
-        elif userInput == 'a':
-            mouse.turnLeft()
-        elif userInput == 'd':
-            mouse.turnRight()
-        for objtag in arena._objects.keys():
-            obj=arena._objects[objtag]
-            if obj._type == 'cheese':
-                obj.update()
-        if lenObj> len(arena._objects):
+    commands={
+        'w':(True,False,False,False,True),
+        's':(False,True,False,False,True),
+        'a':(False,False,True,False,False),
+        'd':(False,False,False,True,False),
+        }
+    while True:
+        userInput = raw_input("what would you like to do now? w,a,s,d or st to stop\n")
+        if userInput=='st':
+            exit(0)
+        elif userInput in ['w','s','a','d']:
+            #lenObj = len(arena._objects.keys())
+            print mouse.update(commands[userInput])
+            for objtag in arena._objects.keys():
+                obj=arena._objects[objtag]
+                if obj._type == 'cheese':
+                    obj.update()
+            #if lenObj> len(arena._objects):
+            #    arena.updateHeatmapFull('elevation')
+            #    lenObj = len(arena._objects)
+            #else:
+            #    arena.updateHeatmap('elevation')
             arena.updateHeatmapFull('elevation')
-            lenObj = len(arena._objects)
+            mouse.updateHeatmapFull('elevation')
+            arena._fig.show()
+            mouse._viewport['elevation']['fig'].canvas.draw()
+            mouse._viewport['elevation']['fig'].canvas.flush_events()
+            #userInput = raw_input("what would you like to do now? w,a,s,d or st to stop\n")
         else:
-            arena.updateHeatmap('elevation')
-        mouse.updateHeatmapFull('elevation')
-        arena._fig.show()
-        mouse._figure.show()
-        userInput = raw_input("what would you like to do now? w,a,s,d or st to stop")
+            pass
         
 if __name__=='__main__':
     main()
+    exit(0)

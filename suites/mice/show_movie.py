@@ -73,17 +73,17 @@ DATA={}
 # decode first frame to initialize the arena 
 decode_mids(next(input),DATA)
 # place cheeses in arena
-for objtag in DATA['cheeses']:
+for objtag in DATA['che_out']:
     arena.addCheese(
         str(objtag),
-        icx_pair(DATA['cheeses'][str(objtag)]),
+        icx_pair(DATA['che_out'][str(objtag)]),
         cheeseParams,
         )
 # place mouse in arena
 arena.addMouse(
     'mus',
-    icx_pair(DATA['pos']),
-    {'viewSize':preamble['viewportSize'],'direction' : icx_pair(DATA['direction'])},
+    icx_pair(DATA['pos_out']),
+    {'viewSize':preamble['viewportSize'],'direction' : icx_pair(DATA['dir_out'])},
     )
 # update data to be displayed in the movie:
 arena.putmisc(str(DATA['counter']))
@@ -101,10 +101,10 @@ def animate(record):
         obj=arena._objects[objtag]
         if obj._type=='mouse':
             # teleport the mouse to its new position
-            obj.teleport(icx_pair(DATA['pos']),icx_pair(DATA['direction']))
+            obj.teleport(icx_pair(DATA['pos_out']),icx_pair(DATA['dir_out']))
         elif obj._type=='cheese':
             # remove the cheese if it is gone
-            if not objtag in DATA['cheeses']:
+            if not objtag in DATA['che_out']:
                 obj.remove()
                 flag=True
             else:

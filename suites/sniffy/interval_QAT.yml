@@ -2,7 +2,7 @@
 
 script: sniffy_linear
 func: start_experiment
-Nruns: 3
+Nruns: 1
 
 params:
   SnapType: qualitative
