@@ -21,10 +21,6 @@ def start_experiment(run_params):
     YBOUNDS=eval(run_params['ybounds'])
     viewportSize=int(run_params['viewportSize'])
     cheesesPerView=float(run_params['cheesesPerView'])
-    training_cheeseParams={
-        'nibbles':int(run_params['training_nibbles']),
-        'nibbleDist':int(run_params['training_nibbleDist']),
-        }
     cheeseParams={
         'nibbles':int(run_params['nibbles']),
         'nibbleDist':int(run_params['nibbleDist']),
@@ -51,17 +47,6 @@ def start_experiment(run_params):
     ### construct arenas
     #
 
-    # training arena is small
-    training_arena = Arena_base(
-        (0,2*viewportSize),
-        (0,2*viewportSize),
-        )
-    # random starting position in the training arena
-    training_arena.addRandomMouse('mus',viewportSize)
-    # a single cheese in the training arena
-    training_arena.addRandomCheese(1,training_cheeseParams)
-
-    #running phase
     arena = Arena_base(XBOUNDS,YBOUNDS,eval(run_params['out_of_bounds']))
     arena.addRandomMouse('mus',viewportSize)
     # initial number of cheeses is set to satisfy, on average, the cheesesPerView constraint
@@ -284,13 +269,9 @@ def start_experiment(run_params):
     def arena_update(state):
         command=(bool(state[id_fd][0]),bool(state[id_bk][0]),bool(state[id_lt][0]),bool(state[id_rt][0]),bool(state[id_arb_top][0]))
         #update operations on arena
-        if state[id_count][0]<BURN_IN_CYCLES:
-            training_arena.update_objs(command)
-            return training_arena
-        else:
-            arena.update_objs(command)
-            return arena
-    EX.construct_measurable(id_arena, arena_update,[training_arena],depth=0)
+        arena.update_objs(command)
+        return arena
+    EX.construct_measurable(id_arena, arena_update,[arena],depth=0)
 
     ###MOUSE ACCESS
     id_mouse=EX.register('mouse')
@@ -312,7 +293,6 @@ def start_experiment(run_params):
     INIT=EX.this_state(id_pos).strip()
     EX.construct_measurable(id_pos_out,pos_out,[INIT],depth=0)
 
-
     # mouse pose
     id_direction = EX.register('direction')
     def direction(state):
@@ -331,15 +311,22 @@ def start_experiment(run_params):
     def cheeses_update(state):
         tmp_objs=state[id_arena][0]._objects
         return {tag:tmp_objs[tag]._pos for tag in tmp_objs.keys() if tmp_objs[tag]._type=='cheese'}
-    INIT={tag:training_arena._objects[tag]._pos for tag in training_arena._objects.keys() if training_arena._objects[tag]._type=='cheese'}
+    INIT={tag:arena._objects[tag]._pos for tag in arena._objects.keys() if arena._objects[tag]._type=='cheese'}
     EX.construct_measurable(id_cheeses,cheeses_update,[INIT],depth=0)
     # cheeses for output
     id_che_out = EX.register('che_out')
     def che_out(state):
         ch=state[id_cheeses][0]
         return {tag:ch[tag].strip() for tag in ch}
-    INIT={objtag:training_arena._objects[objtag]._pos.strip() for objtag in training_arena._objects.keys() if training_arena._objects[objtag]._type=='cheese'}
+    INIT={objtag:arena._objects[objtag]._pos.strip() for objtag in arena._objects.keys() if arena._objects[objtag]._type=='cheese'}
     EX.construct_measurable(id_che_out,che_out,[INIT],depth=0)
+
+    # min distance to target
+    id_min_dist=EX.register('mdist')
+    def min_dist(state):
+        return min([(state[id_pos][0]-state[id_cheeses][0][tag]).ellone() for tag in state[id_cheeses][0]])
+    INIT=min([(EX.this_state(id_pos)-EX.this_state(id_cheeses)[tag]).ellone() for tag in EX.this_state(id_cheeses)])
+    EX.construct_measurable(id_min_dist,min_dist,[INIT],depth=0)
 
     ### MOTIVATIONAL SIGNALS
     #
@@ -357,19 +344,19 @@ def start_experiment(run_params):
         rescaling_step = lambda x:x
         def getElevation(state):
             return rescaling_step(state[id_arena][0].attrCalc(state[id_pos][0],'elevation'))
-        INIT=rescaling_step(training_arena.attrCalc(training_arena.getMice('mus')._pos,'elevation'))
+        INIT=rescaling_step(arena.attrCalc(arena.getMice('mus')._pos,'elevation'))
         EX.construct_measurable(id_sig_step, getElevation,[INIT],depth=0)
 
 
     # turning motivational signal    
     if SnapType=='qualitative':
-        rescaling_turn = lambda x: 16-pow(4,1+x)
+        rescaling_turn = lambda x: 16-int(np.floor(pow(4,1+x)))
     else:
-        rescaling_turn = lambda x: pow(4,1+x)
+        rescaling_turn = lambda x: pow(4.,1+x)
 
     def turn_motivation(state):
         return rescaling_turn(state[id_mouse][0].calculate_cos_grad('elevation'))
-    INIT=rescaling_turn(training_arena.getMice('mus').calculate_cos_grad('elevation'))
+    INIT=rescaling_turn(arena.getMice('mus').calculate_cos_grad('elevation'))
     EX.construct_measurable(id_sig_turn,turn_motivation,[INIT],depth=0)
 
     #adding sensors to each agent
@@ -402,7 +389,7 @@ def start_experiment(run_params):
     for dirn in ['fd','bk','lt','rt']:
         for ind in [4,9,12,14,15]:
             id_angle[ind,dirn],cid_angle[ind,dirn]=EX.register_sensor('a_'+dirn+'_'+str(ind))
-            INIT=training_arena.getMice('mus').angle(ind,dirn)
+            INIT=arena.getMice('mus').angle(ind,dirn)
             EX.construct_sensor(id_angle[ind,dirn],angles_upd(ind,dirn),[INIT,INIT])
             for agent in [RT,LT,FD]:#,BK]:
                 agent.add_sensor(id_angle[ind,dirn])
@@ -439,7 +426,7 @@ def start_experiment(run_params):
             for mid in agent._SNAPSHOTS[token]._SENSORS:
                 delay_sigs.append(agent.generate_signal([mid],token))
             agent.delay(delay_sigs, token)
-            print UMACD[(agent._ID,token)].getCurrent()
+            #print UMACD[(agent._ID,token)].getCurrent()
 
     while EX.this_state(id_count)< BURN_IN_CYCLES:
         instruction = [
@@ -448,7 +435,7 @@ def start_experiment(run_params):
             (id_fd if rnd(2) else cid_fd),
             (id_bk if rnd(2) else cid_bk)]
         EX.update_state(instruction)
-        #recorder.record()
+        recorder.record()
 
     while EX.this_state(id_count)< TOTAL_CYCLES:
         EX.update_state()

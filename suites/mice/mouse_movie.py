@@ -128,5 +128,5 @@ anim = animation.FuncAnimation(
     interval=50,
     )
 
-#plt.show()
-anim.save(os.path.join(DIRECTORY,RUN_NAME(NUM)+'.mp4'),dpi=100)#,writer='imagemagick')
+plt.show()
+#anim.save(os.path.join(DIRECTORY,RUN_NAME(NUM)+'.mp4'),dpi=100)#,writer='imagemagick')
