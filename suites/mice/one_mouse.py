@@ -397,7 +397,7 @@ def start_experiment(run_params):
     def angles_upd(ind,dirn):
         #ind is a numerical index
         #dirn is an icomplex direction
-        return lambda state: state[id_mouse][0].DS(ind,dirn)
+        return lambda state: state[id_mouse][0].angle(ind,dirn)
 
     for dirn in ['fd','bk','lt','rt']:
         for ind in [4,9,12,14,15]:
@@ -439,7 +439,7 @@ def start_experiment(run_params):
             for mid in agent._SNAPSHOTS[token]._SENSORS:
                 delay_sigs.append(agent.generate_signal([mid],token))
             agent.delay(delay_sigs, token)
-            print len(UMACD[(agent._ID,token)].getTarget())
+            print UMACD[(agent._ID,token)].getCurrent()
 
     while EX.this_state(id_count)< BURN_IN_CYCLES:
         instruction = [
