@@ -48,9 +48,9 @@ get experiment:
   message: Get experiment info
   kwargs:
     agent_ids:
-      - [test_agent1, default]
-      - [test_agent2, default]
-      - [test_agent3, qualitative]
+      - [test_agent1, Stationary]
+      - [test_agent2, Stationary]
+      - [test_agent3, Qualitative]
 
 delete agent1:
   method: DELETE
