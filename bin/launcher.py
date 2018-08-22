@@ -29,7 +29,7 @@ if __name__ == "__main__":
     data['params']['Nruns']=data['Nruns']
     params = data['params']
     #print params
-    test_name_abs_path = os.path.join(os.getcwd(),data['params']['name'])
+    test_name = data['params']['name']
     test_yml_abs_path = os.path.join(os.getcwd(), test_yml)
     print "Simulation label: %s" % test_name
     print "Simulation yml file: %s" % test_yml_abs_path
@@ -39,14 +39,14 @@ if __name__ == "__main__":
 
     #dump_pickle(test_name, params)
     # create preamble file in subdirectory named $test_name$
+    script_working_directory=os.path.join(os.getcwd(),test_name_abs_path)
     try:
-        os.mkdir(test_name_abs_path)
-    except WindowsError:
-        shutil.rmtree(test_name_abs_path)
-        os.mkdir(test_name_abs_path)
+        os.mkdir(test_name)
+    except:
+        shutil.rmtree(script_working_directory)
+        os.mkdir(test_name)
 
     #script working directory:
-    script_working_directory=os.path.join(os.getcwd(),test_name)
     preamble_file_name=os.path.join(script_working_directory,test_name+'.pre')           
     preamblef = open(preamble_file_name,'wb')
     json.dump(params, preamblef)
