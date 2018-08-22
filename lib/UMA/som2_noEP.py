@@ -5,6 +5,7 @@ from numpy.random import randint as rnd
 import numpy as np
 from client.UMARest import *
 
+import os
 import uuid
 import time
 import json
@@ -864,7 +865,7 @@ class experiment_output():
         self._preamble=preamble
 
         #Append mid info from experiment to preamble for overwriting
-        preamble_file_name=".\\"+preamble['name']+"\\"+preamble['name']+".pre"
+        preamble_file_name=os.path.join(os.getcwd(),preamble['name'],preamble['name']+".pre")
         preamblef=open(preamble_file_name,'wb')
 
         #Add list of agents to preamble
@@ -896,7 +897,7 @@ class experiment_output():
         preamblef.close()
 
         #Designated filename for UNBUFFERED recording in binary mode
-        output_file_name=".\\"+preamble['name']+"\\"+experiment._EXPERIMENT_ID+".dat"
+        output_file_name=os.path.join(os.getcwd(),preamble['name'],experiment._EXPERIMENT_ID+".dat")
         self._outfile=open(output_file_name,'wb',int(unbufferedQ))
 
     def record(self):

@@ -3,7 +3,7 @@ import sys
 import os
 import shutil
 import importlib
-import cPickle
+import json
 from cluster.cluster import *
 
 def check_fields(data):
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     data['params']['Nruns']=data['Nruns']
     params = data['params']
     #print params
-    test_name = data['params']['name']
+    test_name_abs_path = os.path.join(os.getcwd(),data['params']['name'])
     test_yml_abs_path = os.path.join(os.getcwd(), test_yml)
     print "Simulation label: %s" % test_name
     print "Simulation yml file: %s" % test_yml_abs_path
@@ -40,15 +40,16 @@ if __name__ == "__main__":
     #dump_pickle(test_name, params)
     # create preamble file in subdirectory named $test_name$
     try:
-        os.mkdir(test_name)
+        os.mkdir(test_name_abs_path)
     except WindowsError:
-        shutil.rmtree(test_name)
-        os.mkdir(test_name)
+        shutil.rmtree(test_name_abs_path)
+        os.mkdir(test_name_abs_path)
+
     #script working directory:
     script_working_directory=os.path.join(os.getcwd(),test_name)
     preamble_file_name=os.path.join(script_working_directory,test_name+'.pre')           
     preamblef = open(preamble_file_name,'wb')
-    cPickle.dump(params, preamblef, protocol=cPickle.HIGHEST_PROTOCOL)
+    json.dump(params, preamblef)
     preamblef.close()
 
     # run the specified script with given .yml input
