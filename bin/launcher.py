@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     #dump_pickle(test_name, params)
     # create preamble file in subdirectory named $test_name$
-    script_working_directory=os.path.join(os.getcwd(),test_name_abs_path)
+    script_working_directory=os.path.join(os.getcwd(),test_name)
     try:
         os.mkdir(test_name)
     except:
