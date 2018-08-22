@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 #--------------------------------------------------------------------------------------
-# This plotter assumes the presence of the following output file structure:
+# This plotter assumes the presence of the following data file structure:
 #
 # - All output files are located inside a subdir of the working dir named <name>
 #
