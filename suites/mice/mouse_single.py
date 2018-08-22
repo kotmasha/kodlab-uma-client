@@ -16,6 +16,19 @@ def printArena(arena):
 
 
 def start_experiment(run_params):
+    # experiment parameters
+    XBOUNDS=eval(run_params['xbounds'])
+    YBOUNDS=eval(run_params['ybounds'])
+    viewportSize=int(run_params['viewportSize'])
+    cheesesPerView=float(run_params['cheesesPerView'])
+    training_cheeseParams={
+        'nibbles':int(run_params['training_nibbles']),
+        'nibbleDist':int(run_params['training_nibbleDist']),
+        }
+    cheeseParams={
+        'nibbles':int(run_params['nibbles']),
+        'nibbleDist':int(run_params['nibbleDist']),
+        }
     # Agents:
     SnapType=run_params['SnapType']
     try:
@@ -24,29 +37,44 @@ def start_experiment(run_params):
         Discount=0.875
     AutoTarg=bool(run_params['AutoTarg'])
     # Decision cycles:
-    TOTAL_CYCLES = run_params['total_cycles']
-    BURN_IN_CYCLES = run_params['burn_in_cycles']
+    TOTAL_CYCLES = int(run_params['total_cycles'])
+    BURN_IN_CYCLES = int(run_params['burn_in_cycles'])
     # Recording options:
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
-    record_global=run_params['ex_dataQ'] #True
-    record_agents=run_params['agent_dataQ'] #True
+    record_global=bool(run_params['ex_dataQ']) #True
+    record_agents=bool(run_params['agent_dataQ']) #True
     test_name=run_params['test_name']
+    # connection to UMA core
     host = run_params['host']
     port = run_params['port']
 
+    ### construct arenas
+    #
 
-    arena = Arena_base(eval(run_params['xbounds']),eval(run_params['ybounds']),eval(run_params['out_of_bounds']))
-    arena.addRandomMouse('mus',viewsize=run_params['viewportSize'])
-    #arena.addRandomMice(run_params['miceNum'])
+    # training arena is small
+    training_arena = Arena_base(
+        (0,2*viewportSize),
+        (0,2*viewportSize),
+        )
+    # random starting position in the training arena
+    training_arena.addRandomMouse('mus',viewportSize)
+    # a single cheese in the training arena
+    training_arena.addRandomCheese(1,training_cheeseParams)
 
-    cheeseParams={
-        'nibbles':run_params['nibbles'],
-        'nibbleDist':run_params['nibbleDist'],
-        }
-    arena.addRandomCheeses(run_params['cheeseNum'],cheeseParams)
+    #running phase
+    arena = Arena_base(XBOUNDS,YBOUNDS,eval(run_params['out_of_bounds']))
+    arena.addRandomMouse('mus',viewportSize)
+    # initial number of cheeses is set to satisfy, on average, the cheesesPerView constraint
+    cheeseNum=int(np.floor(cheesesPerView*((XBOUNDS[1]-XBOUNDS[0]+0.0)*(YBOUNDS[1]-YBOUNDS[0]))/(4.0*pow(viewportSize,2))))
+    arena.addRandomCheeses(cheeseNum,cheeseParams)
 
+    ### Mouse/Agents parameters
+    #
+
+    # probability of stepping (as opposed to turning)
     STEP_PROB = run_params['step_prob']
     
+    # agent type etc
     AGENT_PARAMS = {
         'type': SnapType,
         'AutoTarg': AutoTarg,
@@ -54,7 +82,9 @@ def start_experiment(run_params):
     }
 
 
-    # initialize a new experiment
+    ### Initialize a new experiment
+    #
+
     EX = Experiment(test_name, UMARestService(host, port))
     recorder=experiment_output(EX,run_params)
     id_dec = 'decision'
@@ -252,10 +282,17 @@ def start_experiment(run_params):
     ###ARENA UPDATE
     id_arena=EX.register('arena')
     def arena_update(state):
+        command=(bool(state[id_fd][0]),bool(state[id_bk][0]),bool(state[id_lt][0]),bool(state[id_rt][0]),bool(state[id_arb_top][0]))
         #update operations on arena
-        state[id_arena][0].update_objs([bool(state[id_fd][0]),bool(state[id_bk][0]),bool(state[id_rt][0]),bool(state[id_lt][0]),bool(state[id_arb_top][0])])
-        return state[id_arena][0]
-    EX.construct_measurable(id_arena, arena_update,[arena],depth=0)
+        if state[id_count][0]<BURN_IN_CYCLES:
+            training_arena.update_objs(command)
+            return training_arena
+        else:
+            training_arena.update_objs(command)
+            return training_arena
+            #arena.update_objs(command)
+            #return arena
+    EX.construct_measurable(id_arena, arena_update,[training_arena],depth=0)
 
     ###MOUSE ACCESS
     id_mouse=EX.register('mouse')
@@ -264,99 +301,114 @@ def start_experiment(run_params):
     INIT=EX.this_state(id_arena).getMice('mus')
     EX.construct_measurable(id_mouse, mouse_update,[INIT],depth=0)
 
-    #mouse position
+    # mouse position
     id_pos = EX.register('pos')
     def position(state):
-        return state[id_mouse][0]._pos.strip()
-    INIT=arena.getMice('mus')._pos.strip()
+        return state[id_mouse][0]._pos
+    INIT=EX.this_state(id_mouse)._pos
     EX.construct_measurable(id_pos,position,[INIT],depth=0)
+    # mouse position (output)
+    id_pos_out = EX.register('pos_out')
+    def pos_out(state):
+        return state[id_pos][0].strip()
+    INIT=EX.this_state(id_pos).strip()
+    EX.construct_measurable(id_pos_out,pos_out,[INIT],depth=0)
 
-    #mouse pose
+
+    # mouse pose
     id_direction = EX.register('direction')
     def direction(state):
-        return state[id_mouse][0]._attr['direction'].strip()
-    INIT=arena.getMice('mus')._attr['direction'].strip()
+        return state[id_mouse][0]._attr['direction']
+    INIT=EX.this_state(id_mouse)._attr['direction']
     EX.construct_measurable(id_direction,direction,[INIT],depth=0)
+    # mouse pose (output)
+    id_dir_out = EX.register('dir_out')
+    def dir_out(state):
+        return state[id_direction][0].strip()
+    INIT=EX.this_state(id_direction).strip()
+    EX.construct_measurable(id_dir_out,dir_out,[INIT],depth=0)
 
-    #the other objects(cheeses) are recorded as [tag: pos]
+    # cheeses are recorded as a dict of [tag:pos]
     id_cheeses = EX.register('cheeses')
     def cheeses_update(state):
-        tmp_cheeses={}
         tmp_objs=state[id_arena][0]._objects
-        for objtag in objs.keys():
-            obj=tmp_objs[objtag]
-            if obj._type == 'cheese':
-                tmp_cheeses[objtag]=obj._pos.strip()
-            else:
-                pass
-        return tmp_cheeses
-    INIT = {objtag:arena._objects[objtag]._pos.strip() for objtag in arena._objects.keys() if arena._objects[objtag]._type=='cheese'}
-    EX.construct_measurable(id_cheeses,cheeses_update,[INIT],depth=0)                
-
+        return {tag:tmp_objs[tag]._pos for tag in tmp_objs.keys() if tmp_objs[tag]._type=='cheese'}
+    INIT={tag:training_arena._objects[tag]._pos for tag in training_arena._objects.keys() if training_arena._objects[tag]._type=='cheese'}
+    EX.construct_measurable(id_cheeses,cheeses_update,[INIT],depth=0)
+    # cheeses for output
+    id_che_out = EX.register('che_out')
+    def che_out(state):
+        ch=state[id_cheeses][0]
+        return {tag:ch[tag].strip() for tag in ch}
+    INIT={objtag:training_arena._objects[objtag]._pos.strip() for objtag in training_arena._objects.keys() if training_arena._objects[objtag]._type=='cheese'}
+    EX.construct_measurable(id_che_out,che_out,[INIT],depth=0)
 
     ### MOTIVATIONAL SIGNALS
     #
 
     # stepping motivational signal
-    rescaling_step = lambda x:x
-    def getElevation(state):
-        return rescaling_step(state[id_arena][0].attrCalc(icomplex(state[id_pos][0]),'elevation'))
-    INIT=arena.attrCalc(arena.getMice('mus')._pos,'elevation')
-    EX.construct_measurable(id_sig_step, getElevation, [INIT],depth=0)
+    if SnapType=='qualitative':
+        # signal is the ellone distance to the closest cheese
+        def getMinCheeseDist(state):
+            ch=EX.state[id_cheeses][0]
+            return min([(ch[tag]-state[id_pos][0]).ellone() for tag in ch.keys()])
+        ch=EX.this_state(id_cheeses)
+        INIT=min([(ch[tag]-EX.this_state(id_pos)).ellone() for tag in ch.keys()])
+        EX.construct_measurable(id_sig_step,getMinCheeseDist,[INIT],depth=0)
+    else:
+        rescaling_step = lambda x:x
+        def getElevation(state):
+            return rescaling_step(state[id_arena][0].attrCalc(state[id_pos][0],'elevation'))
+        INIT=rescaling_step(training_arena.attrCalc(training_arena.getMice('mus')._pos,'elevation'))
+        EX.construct_measurable(id_sig_step, getElevation,[INIT],depth=0)
+
 
     # turning motivational signal    
-    rescaling_turn = lambda x: pow(4,(1+x))
+    if SnapType=='qualitative':
+        rescaling_turn = lambda x: 16-int(np.floor(pow(4,1+x)))
+    else:
+        rescaling_turn = lambda x: pow(4.,1+x)
+
     def turn_motivation(state):
         return rescaling_turn(state[id_mouse][0].calculate_cos_grad('elevation'))
-    INIT=rescaling_turn(arena.getMice('mus').calculate_cos_grad('elevation'))
+    INIT=rescaling_turn(training_arena.getMice('mus').calculate_cos_grad('elevation'))
     EX.construct_measurable(id_sig_turn,turn_motivation,[INIT],depth=0)
 
     #adding sensors to each agent
     #-----------------------length sensors-----------------------------
-    def get_dir_name(direction):
-        if direction == North:
-            return 'North'
-        if direction == South:
-            return 'South'
-        if direction == West:
-            return 'West'
-        return 'East'
 
 
-
-
-    id_LS = {}
-    cid_LS = {}
-    def LS_upd(ind,dirn):
-        #ind is a numerical index
-        #dirn is an icomplex direction
-        return lambda state: state[id_mouse][0].LS(ind,dirn)
-
-    for dirn in [North,South,East,West]:
-        for ind in xrange(6):
-            id_LS[ind,dirn],cid_LS[ind,dirn]=EX.register_sensor('LS_'+get_dir_name(dirn)+'_'+str(ind))
-            INIT=arena.getMice('mus').LS(ind,dirn)
-            EX.construct_sensor(id_LS[ind,dirn],LS_upd(ind,dirn),[INIT,INIT])
-            for agent in [RT,LT,FD]:#,BK]:
-                agent.add_sensor(id_LS[ind,dirn])
+    #id_LS = {}
+    #cid_LS = {}
+    #def LS_upd(ind,dirn):
+    #    #ind is a numerical index
+    #    #dirn is an icomplex direction
+    #    return lambda state: state[id_mouse][0].LS(ind,dirn)
+    #
+    #for dirn in [North,South,East,West]:
+    #    for ind in xrange(6):
+    #        id_LS[ind,dirn],cid_LS[ind,dirn]=EX.register_sensor('LS_'+get_dir_name(dirn)+'_'+str(ind))
+    #        INIT=arena.getMice('mus').LS(ind,dirn)
+    #        EX.construct_sensor(id_LS[ind,dirn],LS_upd(ind,dirn),[INIT,INIT])
+    #        for agent in [RT,LT,FD]:#,BK]:
+    #            agent.add_sensor(id_LS[ind,dirn])
         
     #-----------------------------turn sensors-----------------
-    id_DS={}
-    cid_DS={}
-    def DS_upd(ind,dirn):
+    id_angle={}
+    cid_angle={}
+    def angles_upd(ind,dirn):
         #ind is a numerical index
         #dirn is an icomplex direction
-        return lambda state: state[id_mouse][0].DS(ind,dirn)
+        return lambda state: state[id_mouse][0].angle(ind,dirn)
 
-    for dirn in [North,South,East,West]:
+    for dirn in ['fd','bk','lt','rt']:
         for ind in [4,9,12,14,15]:
-            id_DS[ind,dirn],cid_DS[ind,dirn]=EX.register_sensor('DS_'+get_dir_name(dirn)+'_'+str(ind))
-            INIT=arena.getMice('mus').DS(ind,dirn)
-            EX.construct_sensor(id_DS[ind,dirn],DS_upd(ind,dirn),[INIT,INIT])
+            id_angle[ind,dirn],cid_angle[ind,dirn]=EX.register_sensor('a_'+dirn+'_'+str(ind))
+            INIT=training_arena.getMice('mus').angle(ind,dirn)
+            EX.construct_sensor(id_angle[ind,dirn],angles_upd(ind,dirn),[INIT,INIT])
             for agent in [RT,LT,FD]:#,BK]:
-                agent.add_sensor(id_DS[ind,dirn])
+                agent.add_sensor(id_angle[ind,dirn])
      
-
     
     #---------------------------- INIT ------------------------------------------
     for agent_name in EX._AGENTS:
@@ -364,7 +416,7 @@ def start_experiment(run_params):
 
     # an update state to fill the state deques
     EX.update_state([cid_rt, cid_lt, cid_fd, cid_bk])
-    recorder.record()
+    #recorder.record()
 
     #client data objects for the experiment
     UMACD={}
@@ -382,20 +434,14 @@ def start_experiment(run_params):
                 tmp_target=agent.generate_signal([id_nav],token).value().tolist()
                 UMACD[(agent._ID,token)].setTarget(tmp_target)
                 
-        # ANOTHER UPDATE CYCLE (without action)
-        EX.update_state([cid_rt,cid_lt])
-        recorder.record()
-
-    # introducing the delayed sensors
+    # introducing a delayed sensor for every initial sensor, into each snapshot:
     for agent in [RT,LT,FD]:
         for token in ['plus','minus']:
             delay_sigs = []
-            for dirn in [North,South,East,West]:
-                for ind in [4,9,12,14,15]:
-                    delay_sigs.append(agent.generate_signal(['DS_'+get_dir_name(dirn)+'_'+str(ind)],token))
-                for ind in xrange(6):
-                    delay_sigs.append(agent.generate_signal(['LS_'+get_dir_name(dirn)+'_'+str(ind)],token))
-            agent.delay(delay_sigs, token)      
+            for mid in agent._SNAPSHOTS[token]._SENSORS:
+                delay_sigs.append(agent.generate_signal([mid],token))
+            agent.delay(delay_sigs, token)
+            #print UMACD[(agent._ID,token)].getCurrent()
 
     while EX.this_state(id_count)< BURN_IN_CYCLES:
         instruction = [
@@ -404,12 +450,14 @@ def start_experiment(run_params):
             (id_fd if rnd(2) else cid_fd),
             (id_bk if rnd(2) else cid_bk)]
         EX.update_state(instruction)
-        recorder.record()
+        #recorder.record()
 
     while EX.this_state(id_count)< TOTAL_CYCLES:
         EX.update_state()
         recorder.record()
 
     recorder.close()
+
+    EX.remove_experiment()
     
 

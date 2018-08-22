@@ -142,20 +142,31 @@ for ind in xrange(NRUNS):
 #Prepare the axes
 fig,ax=plt.subplots()
 plt.subplots_adjust(left=0.05,right=0.95,bottom=0.1,top=0.9)
-fig.suptitle('Sniffy: mean and std. deviations of distance to the target as a function of time\n during and after training by random exploration',fontsize=22)
-plt.xlabel('time elapsed (cycles)',fontsize=16)
-plt.ylabel('distance to target',fontsize=16)
+fig.suptitle('Mice: mean and std. deviations of distance to nearest cheese as a function of time\n after '+str(preamble['burn_in_cycles'])+'cycles of training by random exploration in a '+str(2*preamble['viewportSize'])+'*'+str(2*preamble['viewportSize'])+' environment.',fontsize=22)
+plt.xlabel('time elapsed (run cycles)',fontsize=16)
+plt.ylabel('min distance to target',fontsize=16)
 
 #Form the plots
 t=np.array(DATA['counter'][0])
-dmean=np.mean(np.array(DATA['dist']),axis=0)
-dstd=np.std(np.array(DATA['dist']),axis=0)
+#print len(DATA['che_out'][0][0])
+#print len(DATA['che_out'][1][0])
+#print len(DATA['che_out'][0])
+#exit(0)
+
+#cheeseNums=np.array([[len(item) for item in DATA['che_out'][ind]] for ind in xrange(NRUNS)])
+#dmean=np.mean(cheeseNums,axis=0)
+#dstd=np.std(cheeseNums,axis=0)
+
+minDist=np.array([DATA['mdist'][ind] for ind in xrange(NRUNS)])
+dmean=np.mean(minDist,axis=0)
+dstd=np.std(minDist,axis=0)
+
 
 plt.plot(t,dmean,'-r',alpha=1,label='Mean over '+str(NRUNS)+' runs')
 plt.fill_between(t,dmean-dstd,dmean+dstd,alpha=0.2,color='r',label='std. deviation over '+str(NRUNS)+' runs')
 ymin,ymax=plt.ylim()
 plt.plot([preamble['burn_in_cycles'],preamble['burn_in_cycles']],[ymin,ymax],'-bo',label='training period ends')
-#plt.plot(preamble['burn_in_cycles'],ymin,preamble['burn_in_cycles'],ymax,'bo',)
+plt.plot(preamble['burn_in_cycles'],ymin,preamble['burn_in_cycles'],ymax,'bo',)
 ax.legend()
 
 #Show the plots

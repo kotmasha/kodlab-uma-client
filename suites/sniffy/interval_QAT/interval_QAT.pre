@@ -1,3 +1,1 @@
-€}q(Utotal_cyclesMèUAutoTargˆUnameUinterval_QATUmids_to_record]q(UcounterqUdistqUsigqeUex_dataQ‰Uex_data_recordedq]Uagent_data_recordedq]UNrunsKUagent_dataQ‰UhostU	localhostqUagentsq	]q
-(UrtqUltqeU	test_nameUinterval_QAT_2qUmids_recordedqhUburn_in_cyclesM USnapTypeUqualitativeqUportU8002qU
-env_lengthKu.
+{"total_cycles": 1000, "AutoTarg": true, "name": "interval_QAT", "mids_to_record": ["counter", "dist", "sig"], "ex_dataQ": false, "ex_data_recorded": [], "agent_data_recorded": [], "Nruns": 1, "agent_dataQ": false, "host": "localhost", "agents": ["rt", "lt"], "test_name": "interval_QAT_0", "mids_recorded": ["counter", "dist", "sig"], "burn_in_cycles": 800, "SnapType": "qualitative", "port": "8000", "env_length": 20}

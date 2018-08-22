@@ -1,7 +1,7 @@
 # This is the launcher for UMA Simulation
 import sys
-from os import mkdir
-from shutil import rmtree
+import os
+import shutil
 import importlib
 import cPickle
 from cluster.cluster import *
@@ -11,17 +11,6 @@ def check_fields(data):
     for s in ['script', 'func', 'Nruns', 'params']:
         if s not in data:
             raise Exception(fmt.format(s))
-
-def dump_pickle(name, params):
-    try:
-        mkdir(name)
-    except WindowsError:
-        rmtree(name)
-        mkdir(name)
-               
-    preamblef = open(".\\%s\\%s.pre" % (name, name), "wb")
-    cPickle.dump(params, preamblef, protocol=cPickle.HIGHEST_PROTOCOL)
-    preamblef.close()
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -48,7 +37,21 @@ if __name__ == "__main__":
     print "Function called from script: %s" % str(func.__name__)
     print "Will execute %d simulation runs.\n" % Nruns
 
-    dump_pickle(test_name, params)
+    #dump_pickle(test_name, params)
+    # create preamble file in subdirectory named $test_name$
+    try:
+        os.mkdir(test_name)
+    except WindowsError:
+        shutil.rmtree(test_name)
+        os.mkdir(test_name)
+    #script working directory:
+    script_working_directory=os.path.join(os.getcwd(),test_name)
+    preamble_file_name=os.path.join(script_working_directory,test_name+'.pre')           
+    preamblef = open(preamble_file_name,'wb')
+    cPickle.dump(params, preamblef, protocol=cPickle.HIGHEST_PROTOCOL)
+    preamblef.close()
+
+    # run the specified script with given .yml input
     cluster = ClusterManager()
     pool = PoolManager()
     pool.start(func, test_yml_abs_path, Nruns, cluster.get_Ninstances(), cluster.get_port(), cluster.get_host())
