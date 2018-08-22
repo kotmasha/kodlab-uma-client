@@ -25,4 +25,6 @@ params:
     - pos_out
     - dir_out
     - che_out
-    - mdist
+    - sig_step
+    - sig_turn
+

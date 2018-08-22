@@ -321,24 +321,15 @@ def start_experiment(run_params):
     INIT={objtag:arena._objects[objtag]._pos.strip() for objtag in arena._objects.keys() if arena._objects[objtag]._type=='cheese'}
     EX.construct_measurable(id_che_out,che_out,[INIT],depth=0)
 
-    # min distance to target
-    id_min_dist=EX.register('mdist')
-    def min_dist(state):
-        return min([(state[id_pos][0]-state[id_cheeses][0][tag]).ellone() for tag in state[id_cheeses][0]])
-    INIT=min([(EX.this_state(id_pos)-EX.this_state(id_cheeses)[tag]).ellone() for tag in EX.this_state(id_cheeses)])
-    EX.construct_measurable(id_min_dist,min_dist,[INIT],depth=0)
-
     ### MOTIVATIONAL SIGNALS
     #
 
-    # stepping motivational signal
+    # stepping motivational signal (already registered)
     if SnapType=='qualitative':
         # signal is the ellone distance to the closest cheese
         def getMinCheeseDist(state):
-            ch=EX.state[id_cheeses][0]
-            return min([(ch[tag]-state[id_pos][0]).ellone() for tag in ch.keys()])
-        ch=EX.this_state(id_cheeses)
-        INIT=min([(ch[tag]-EX.this_state(id_pos)).ellone() for tag in ch.keys()])
+            return state[id_mouse][0].mdist()
+        INIT=EX.this_state(id_mouse).mdist()
         EX.construct_measurable(id_sig_step,getMinCheeseDist,[INIT],depth=0)
     else:
         rescaling_step = lambda x:x
@@ -428,7 +419,7 @@ def start_experiment(run_params):
             agent.delay(delay_sigs, token)
             #print UMACD[(agent._ID,token)].getCurrent()
 
-    while EX.this_state(id_count)< BURN_IN_CYCLES:
+    while EX.this_state(id_count)<BURN_IN_CYCLES:
         instruction = [
             (id_lt if rnd(2) else cid_lt),
             (id_rt if rnd(2) else cid_rt),
@@ -437,7 +428,7 @@ def start_experiment(run_params):
         EX.update_state(instruction)
         recorder.record()
 
-    while EX.this_state(id_count)< TOTAL_CYCLES:
+    while EX.this_state(id_count)<TOTAL_CYCLES:
         EX.update_state()
         recorder.record()
 
