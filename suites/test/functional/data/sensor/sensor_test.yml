@@ -540,7 +540,7 @@ get sensor5 after delete agent:
   method: GET
   url: /UMA/object/sensor
   status_code: 404
-  message: Cannot find the agent id!
+  message: "No Resource Error Caught: Cannot find object, agentId=test_agent"
   query:
     experiment_id: test_experiment
     agent_id: test_agent

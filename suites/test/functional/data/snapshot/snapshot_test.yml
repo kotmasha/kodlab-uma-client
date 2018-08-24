@@ -50,7 +50,7 @@ create an snapshot with an invalid agent_id:
   method: POST
   url: /UMA/object/snapshot
   status_code: 404
-  message: Cannot find the agent id
+  message: "No Resource Error Caught: Cannot find object, agentId=abc"
   data:
     experiment_id: test_experiment
     agent_id: abc
@@ -269,7 +269,7 @@ delete snapshot with invalid id:
   method: DELETE
   url: /UMA/object/snapshot
   status_code: 404
-  message: Cannot find the snapshot to delete
+  message: "No Resource Error Caught: Cannot find the snapshot, snapshotId=test_snapshot1"
   data:
     experiment_id: test_experiment
     agent_id: test_agent
