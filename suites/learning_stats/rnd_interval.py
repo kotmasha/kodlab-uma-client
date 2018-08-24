@@ -24,7 +24,8 @@ def start_experiment(run_params):
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
-    recorder=experiment_output(EX,run_params)
+    #recorder will be initialized later, at the end of the initialization phase,
+    #to enable collection of all available data tags
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
@@ -170,18 +171,16 @@ def start_experiment(run_params):
     def make_footprint():
         return [rnd(2) for ind in xrange(X_BOUND+1)]
 
-    footprints={}
+    #generate randomized position sensors
+    FOOTPRINTS={}
     for ind in xrange(X_BOUND):
         tmp_name = 'x' + str(ind)
-        footprints[tmp_name]=make_footprint()
+        FOOTPRINTS[tmp_name]=make_footprint()
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)
-        EX.construct_sensor(id_tmp,xsensor(footprints[tmp_name]))
+        EX.construct_sensor(id_tmp,xsensor(FOOTPRINTS[tmp_name]))
         RT.add_sensor(id_tmp)
         LT.add_sensor(id_tmp)
         OBS.add_sensor(id_tmp)
-
-    # record the semantics of the randomized position sensors as supplementary run information
-    recorder.addendum('footprints',footprints)
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -258,11 +257,16 @@ def start_experiment(run_params):
             delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
             EX._AGENTS[agent_id].delay(delay_sigs, token)
 
+
+    # START RECORDING
+    EX.update_state([cid_lt,cid_rt,id_obs])
+    recorder=experiment_output(EX,run_params)
+    recorder.addendum('footprints',FOOTPRINTS)
+
     # -------------------------------------RUN--------------------------------------------
 
     ## Random walk period
     while EX.this_state(id_count) <= BURN_IN_CYCLES:
-        print EX.this_state(id_count)
         # update the state
         instruction=[
             (id_lt if rnd(2) else cid_lt),  #random instruction for LT

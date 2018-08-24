@@ -24,7 +24,8 @@ def start_experiment(run_params):
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
-    recorder=experiment_output(EX,run_params)
+    #recorder will be initialized later, at the end of the initialization phase,
+    #to enable collection of all available data tags
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
@@ -177,12 +178,11 @@ def start_experiment(run_params):
         OBS.add_sensor(id_tmp)
 
     # record the semantics of the position sensors:
-    footprints={}
+    FOOTPRINTS={}
     for ind in xrange(X_BOUND):
-        footprints['x'+str(ind)]=[0 for pos in xrange(X_BOUND+1)]
-        for pos in xrange(X_BOUND+1):
-                footprints['x'+str(ind)][pos]+=xsensor(ind)({id_pos:[pos]})
-    recorder.addendum('footprints',footprints)
+        FOOTPRINTS['x'+str(ind)]=[0 for pos in xrange(X_BOUND)]
+        for pos in xrange(X_BOUND):
+            FOOTPRINTS['x'+str(ind)][pos]+=xsensor(ind)({id_pos:[pos]})
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -234,8 +234,9 @@ def start_experiment(run_params):
 
     # -------------------------------------init--------------------------------------------
 
-    for agent_name in EX._AGENTS:
-        EX._AGENTS[agent_name].init()
+    for agent_id in EX._AGENTS:
+        EX._AGENTS[agent_id].init()
+        print EX._AGENTS[agent_id]._SNAPSHOTS['plus'].make_sensor_labels()
 
     #client data objects for the experiment
     UMACD={}
@@ -259,11 +260,16 @@ def start_experiment(run_params):
             delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
             EX._AGENTS[agent_id].delay(delay_sigs, token)
 
+    # START RECORDING
+    EX.update_state([cid_lt,cid_rt,id_obs])
+    recorder=experiment_output(EX,run_params)
+    recorder.addendum('footprints',FOOTPRINTS)
+
+
     # -------------------------------------RUN--------------------------------------------
 
     ## Random walk period
     while EX.this_state(id_count) <= BURN_IN_CYCLES:
-        print EX.this_state(id_count)
         # update the state
         instruction=[
             (id_lt if rnd(2) else cid_lt),  #random instruction for LT
@@ -295,7 +301,7 @@ if __name__ == "__main__":
         'burn_in_cycles':int(sys.argv[2]),
         'name':sys.argv[4],
         'ex_dataQ':False,
-        'agent_dataQ':False,
+        'agent_dataQ':True,
         'mids_to_record':['counter','dist','sig'],
         'Nruns':1,
         'host':'localhost',
