@@ -236,7 +236,6 @@ def start_experiment(run_params):
 
     for agent_id in EX._AGENTS:
         EX._AGENTS[agent_id].init()
-        print EX._AGENTS[agent_id]._SNAPSHOTS['plus'].make_sensor_labels()
 
     #client data objects for the experiment
     UMACD={}
