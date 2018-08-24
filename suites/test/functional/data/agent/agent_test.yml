@@ -90,9 +90,9 @@ get agent:
     agent_id: test_agent
   kwargs:
     snapshot_ids:
-      - [test_snapshot1, default]
-      - [test_snapshot2, default]
-      - [test_snapshot3, default]
+      - [test_snapshot1, Stationary]
+      - [test_snapshot2, Stationary]
+      - [test_snapshot3, Stationary]
 
 delete agent without agent_id:
   method: DELETE
@@ -104,7 +104,7 @@ delete agent with invlid agent_id:
   method: DELETE
   url: /UMA/object/agent
   status_code: 404
-  message: Cannot find the agent to delete
+  message: "No Resource Error Caught: Cannot find object, agentId=test_agent1"
   data:
     experiment_id: test_experiment
     agent_id: test_agent1
@@ -167,8 +167,8 @@ get agent qualitative:
     agent_id: test_agent
   kwargs:
     snapshot_ids:
-      - [test_snapshot1, qualitative]
-      - [test_snapshot2, qualitative]
+      - [test_snapshot1, Qualitative]
+      - [test_snapshot2, Qualitative]
 
 delete experiment:
   method: DELETE
