@@ -262,16 +262,21 @@ def start_experiment(run_params):
     # -------------------------------------RUN--------------------------------------------
 
     ## Random walk period
-    while EX.this_state(id_count) < BURN_IN_CYCLES:
+    while EX.this_state(id_count) <= BURN_IN_CYCLES:
+        print EX.this_state(id_count)
         # update the state
-        instruction=[(id_lt if rnd(2) else cid_lt),(id_rt if rnd(2) else cid_rt)]
+        instruction=[
+            (id_lt if rnd(2) else cid_lt),  #random instruction for LT
+            (id_rt if rnd(2) else cid_rt),  #random instruction for RT
+            id_obs,                           #OBS should always be active
+            ]
         #instruction = [(id_lt if (EX.this_state(id_count) / X_BOUND) % 2 == 0 else cid_lt),
                        #(id_rt if (EX.this_state(id_count) / X_BOUND) % 2 == 1 else cid_rt)]
         EX.update_state(instruction)
         recorder.record()
 
     ## Main loop
-    while EX.this_state(id_count) < TOTAL_CYCLES:
+    while EX.this_state(id_count) <= TOTAL_CYCLES:
         # make decisions, update the state
         EX.update_state()
         recorder.record()
@@ -291,7 +296,7 @@ if __name__ == "__main__":
         'name':sys.argv[4],
         'ex_dataQ':False,
         'agent_dataQ':False,
-        'mids_to_record':['count','dist','sig'],
+        'mids_to_record':['counter','dist','sig'],
         'Nruns':1,
         'host':'localhost',
         'port':8000,
@@ -302,7 +307,7 @@ if __name__ == "__main__":
     
     try:
         os.mkdir(DIRECTORY)
-    except WindowsError:
+    except:
         pass
     preamblef=open(os.path.join(DIRECTORY,RUN_PARAMS['name']+'.pre'),'wb')
     json.dump(RUN_PARAMS,preamblef)
