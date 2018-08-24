@@ -902,7 +902,7 @@ class experiment_output():
 
         #Dict and file for recording supplementary run information
         supp_file_name=os.path.join(os.getcwd(),preamble['name'],experiment._EXPERIMENT_ID+".sup")
-        self._supfile=open(supp_file_name,'wb',int(unbufferedQ))
+        self._supfile=open(supp_file_name,'wb')
         self._supplementary={}
 
     def record(self):
@@ -929,6 +929,6 @@ class experiment_output():
     def close(self):
         #close the output file
         #recording past this point will produce an error
-        self._outfile.close()
         json.dump(self._supplementary,self._supfile)
         self._supfile.close()
+        self._outfile.close()

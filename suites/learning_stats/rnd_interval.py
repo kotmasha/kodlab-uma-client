@@ -6,19 +6,25 @@ import time
 from UMA.som2_noEP import *
 import sys
 import os
-import cPickle
+import json
 from client.UMARest import *
 
 def start_experiment(run_params):
     # System parameters
-    test_name=run_params['test_name']
+    test_name=run_params['name']
     host = run_params['host']
     port = run_params['port']
+
+    # initialize a new experiment
+    EX = Experiment(test_name, UMARestService(host, port))
+    id_dec = 'decision'
+    id_count= 'counter'
 
     # Recording options:
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
+    recorder=experiment_output(EX,run_params)
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
@@ -49,11 +55,6 @@ def start_experiment(run_params):
         'AutoTarg': AutoTarg,
         'discount': Discount,
     }
-
-    # initialize a new experiment
-    EX = Experiment(test_name, UMARestService(host, port))
-    id_dec = 'decision'
-    id_count= 'counter'
 
     # register basic motion agents;
     # - $True$ tag means they will be marked as dependent (on other agents)
@@ -255,22 +256,26 @@ def start_experiment(run_params):
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
             delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
-            agent.delay(delay_sigs, token)
+            EX._AGENTS[agent_id].delay(delay_sigs, token)
 
     # -------------------------------------RUN--------------------------------------------
-    recorder=experiment_output(EX,run_params)
 
     ## Random walk period
-    while EX.this_state(id_count) < BURN_IN_CYCLES:
+    while EX.this_state(id_count) <= BURN_IN_CYCLES:
+        print EX.this_state(id_count)
         # update the state
-        instruction=[(id_lt if rnd(2) else cid_lt),(id_rt if rnd(2) else cid_rt)]
+        instruction=[
+            (id_lt if rnd(2) else cid_lt),  #random instruction for LT
+            (id_rt if rnd(2) else cid_rt),  #random instruction for RT
+            id_obs,                           #OBS should always be active
+            ]
         #instruction = [(id_lt if (EX.this_state(id_count) / X_BOUND) % 2 == 0 else cid_lt),
                        #(id_rt if (EX.this_state(id_count) / X_BOUND) % 2 == 1 else cid_rt)]
         EX.update_state(instruction)
         recorder.record()
 
     ## Main loop
-    while EX.this_state(id_count) < TOTAL_CYCLES:
+    while EX.this_state(id_count) <= TOTAL_CYCLES:
         # make decisions, update the state
         EX.update_state()
         recorder.record()
@@ -290,7 +295,7 @@ if __name__ == "__main__":
         'name':sys.argv[4],
         'ex_dataQ':False,
         'agent_dataQ':False,
-        'mids_to_record':['count','dist','sig'],
+        'mids_to_record':['counter','dist','sig'],
         'Nruns':1,
         'host':'localhost',
         'port':8000,
@@ -301,10 +306,11 @@ if __name__ == "__main__":
     
     try:
         os.mkdir(DIRECTORY)
-    except WindowsError:
+    except:
         pass
     preamblef=open(os.path.join(DIRECTORY,RUN_PARAMS['name']+'.pre'),'wb')
     json.dump(RUN_PARAMS,preamblef)
     preamblef.close()
         
     start_experiment(RUN_PARAMS)
+
