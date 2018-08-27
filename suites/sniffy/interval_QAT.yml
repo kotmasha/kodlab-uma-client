@@ -2,7 +2,7 @@
 
 script: sniffy_linear
 func: start_experiment
-Nruns: 20
+Nruns: 1
 
 params:
   SnapType: qualitative
@@ -11,7 +11,7 @@ params:
   total_cycles: 1000
   burn_in_cycles: 800
   ex_dataQ: False
-  agent_dataQ: False
+  agent_dataQ: True
   name: interval_QAT
   mids_to_record:
     - counter

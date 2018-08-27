@@ -11,7 +11,7 @@ from client.UMARest import *
 
 def start_experiment(run_params):
     # System parameters
-    test_name=run_params['name']
+    test_name=run_params['test_name']
     host = run_params['host']
     port = run_params['port']
 
@@ -160,20 +160,21 @@ def start_experiment(run_params):
     def xsensor(m,delta):  # along x-axis
         return lambda state: dist(state[id_pos][0],m)<=delta
 
+    #Construct initial sensors and record their semantics
+    FOOTPRINTS=[]
+    all_comp=lambda x: [1-t for t in x]
     for ind in xrange(X_BOUND):
         tmp_name = 'x' + str(ind)
+        tmp_footprint=[0 for pos in xrange(X_BOUND)]
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
         EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
         RT.add_sensor(id_tmp)
         LT.add_sensor(id_tmp)
         OBS.add_sensor(id_tmp)
-
-    # record the semantics of the position sensors:
-    FOOTPRINTS={}
-    for ind in xrange(X_BOUND):
-        FOOTPRINTS['x'+str(ind)]=[0 for pos in xrange(X_BOUND)]
         for pos in xrange(X_BOUND):
-            FOOTPRINTS['x'+str(ind)][pos]+=xsensor(ind,BEACON_WIDTH)({id_pos:[pos]})
+            tmp_footprint[pos]+=xsensor(ind,BEACON_WIDTH)({id_pos:[pos]})
+        FOOTPRINTS.append(tmp_footprint)
+        FOOTPRINTS.append(all_comp(tmp_footprint))
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -245,15 +246,18 @@ def start_experiment(run_params):
                 UMACD[(agent_id,token)].setTarget(tmp_target)
 
     # INTRODUCE DELAYED GPS SENSORS:
+    QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
             delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
             EX._AGENTS[agent_id].delay(delay_sigs, token)
+            QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
     # START RECORDING
-    EX.update_state([cid_lt,cid_rt,id_obs])
+    EX.update_state([cid_lt,cid_rt,cid_obs])
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
+    recorder.addendum('query_ids',QUERY_IDS)
 
 
     # -------------------------------------RUN--------------------------------------------

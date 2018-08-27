@@ -583,7 +583,6 @@ class Snapshot(object):
         decode_mask= lambda item: [sid for sid,flag in zip(self._SENSORS,item[:self._SIZE+1:]) if flag] 
         for item in umacd.get_mask_amper()[self._SIZE/2::]:
             decoded=decode_mask(item)
-            #print decoded
             if len(decoded)==1:
                 label='#'+decoded[0]
             else:
@@ -652,6 +651,9 @@ class Agent(object):
 
         for token in ['plus', 'minus']:
             self._SNAPSHOTS[token].init(self._PARAMS)
+
+    def make_sensor_labels(self,token):
+        return self._SNAPSHOTS[token].make_sensor_labels()
 
     #def validate(self):
     #    snapshot_plus = ServiceSnapshot(self._ID, 'plus', service)

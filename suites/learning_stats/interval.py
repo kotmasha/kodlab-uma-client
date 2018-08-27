@@ -11,7 +11,7 @@ from client.UMARest import *
 
 def start_experiment(run_params):
     # System parameters
-    test_name=run_params['name']
+    test_name=run_params['test_name']
     host = run_params['host']
     port = run_params['port']
 
@@ -132,8 +132,8 @@ def start_experiment(run_params):
 
     # OBSERVER agent simply collects implications among the assigned sensors, always active
     def action_OBS(state):
-        return True
-    OBS = EX.construct_agent(id_obs,id_sig_freq,action_OBS,MOTION_PARAMS) 
+        return False
+    OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS) 
 
     #
     ### "mapping" system
@@ -169,20 +169,21 @@ def start_experiment(run_params):
     def xsensor(m):  # along x-axis
         return lambda state: state[id_pos][0] < m + 1
 
+    #Construct initial sensors and record their semantics
+    FOOTPRINTS=[]
+    all_comp=lambda x: [1-t for t in x]
     for ind in xrange(X_BOUND):
         tmp_name = 'x' + str(ind)
+        tmp_footprint=[0 for pos in xrange(X_BOUND+1)]
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
         EX.construct_sensor(id_tmp, xsensor(ind))  # constructs the measurables associated with the sensor
         RT.add_sensor(id_tmp)
         LT.add_sensor(id_tmp)
         OBS.add_sensor(id_tmp)
-
-    # record the semantics of the position sensors:
-    FOOTPRINTS={}
-    for ind in xrange(X_BOUND):
-        FOOTPRINTS['x'+str(ind)]=[0 for pos in xrange(X_BOUND)]
         for pos in xrange(X_BOUND):
-            FOOTPRINTS['x'+str(ind)][pos]+=xsensor(ind)({id_pos:[pos]})
+            tmp_footprint[pos]+=xsensor(ind)({id_pos:[pos]})
+        FOOTPRINTS.append(tmp_footprint)
+        FOOTPRINTS.append(all_comp(tmp_footprint))
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -254,15 +255,18 @@ def start_experiment(run_params):
                 UMACD[(agent_id,token)].setTarget(tmp_target)
 
     # INTRODUCE DELAYED GPS SENSORS:
+    QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
             delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
             EX._AGENTS[agent_id].delay(delay_sigs, token)
+            QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
     # START RECORDING
-    EX.update_state([cid_lt,cid_rt,id_obs])
+    EX.update_state([cid_lt,cid_rt,cid_obs])
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
+    recorder.addendum('query_ids',QUERY_IDS)
 
 
     # -------------------------------------RUN--------------------------------------------
@@ -273,7 +277,7 @@ def start_experiment(run_params):
         instruction=[
             (id_lt if rnd(2) else cid_lt),  #random instruction for LT
             (id_rt if rnd(2) else cid_rt),  #random instruction for RT
-            id_obs,                           #OBS should always be active
+            cid_obs,                           #OBS should always be active
             ]
         #instruction = [(id_lt if (EX.this_state(id_count) / X_BOUND) % 2 == 0 else cid_lt),
                        #(id_rt if (EX.this_state(id_count) / X_BOUND) % 2 == 1 else cid_rt)]
@@ -299,6 +303,7 @@ if __name__ == "__main__":
         'total_cycles':int(sys.argv[3]),
         'burn_in_cycles':int(sys.argv[2]),
         'name':sys.argv[4],
+        'test_name':sys.argv[4]+'_0',
         'ex_dataQ':False,
         'agent_dataQ':True,
         'mids_to_record':['counter','dist','sig'],
@@ -308,7 +313,7 @@ if __name__ == "__main__":
         }
     
     DIRECTORY=os.path.join(os.getcwd(),RUN_PARAMS['name'])
-    TEST_NAME=RUN_PARAMS['name']+'_0'
+    RUN_PARAMS['name']+='_0'
     
     try:
         os.mkdir(DIRECTORY)
