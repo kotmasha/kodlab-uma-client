@@ -11,14 +11,20 @@ from client.UMARest import *
 
 def start_experiment(run_params):
     # System parameters
-    test_name=run_params['test_name']
+    test_name=run_params['name']
     host = run_params['host']
     port = run_params['port']
+
+    # initialize a new experiment
+    EX = Experiment(test_name, UMARestService(host, port))
+    id_dec = 'decision'
+    id_count= 'counter'
 
     # Recording options:
     record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
     record_global=run_params['ex_dataQ'] #True
     record_agents=run_params['agent_dataQ'] #True
+    recorder=experiment_output(EX,run_params)
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
@@ -26,40 +32,45 @@ def start_experiment(run_params):
     # Parameters and definitions
     AutoTarg=bool(run_params['AutoTarg'])
     SnapType=run_params['SnapType']
-    X_BOUND = run_params['circumference']  # length
-    BEACON_WIDTH = run_params['beacon_width'] # width of place field centered at each position
+    try:
+        Discount=float(run_params['discount'])
+    except KeyError:
+        Discount=None
+
+    # Environment
+    X_BOUND = run_params['env_length']  # length
+    BEACON_WIDTH = run_params['beacon_width']
 
     # distance function
     def dist(p, q):
         return min(abs(p-q),X_BOUND-abs(p-q))
 
-    # agent parameters
-    MOTION_PARAMS = {
-        'type': SnapType,   #'qualitative',
-        'AutoTarg': AutoTarg,   #False,
-    }
+    # "Qualitative" agent parameters
 
-    # initialize a new experiment
-    EX = Experiment(test_name, UMARestService(host, port))
-    id_dec = 'decision'
-    id_count= 'counter'
+    MOTION_PARAMS = {
+        'type': SnapType,
+        'AutoTarg': AutoTarg,
+        'discount': Discount,
+    }
 
     # register basic motion agents;
     # - $True$ tag means they will be marked as dependent (on other agents)
     id_rt, cid_rt = EX.register_sensor('rt')
     id_lt, cid_lt = EX.register_sensor('lt')
+    id_obs,cid_obs=EX.register_sensor('obs')
 
     # register motivation for motion agents
     # - this one is NOT dependent on agents except through the position, so
     #   it carries the default False tag.
-    #id_at_targ, cid_at_targ = EX.register_sensor('atT')
+    id_at_targ, cid_at_targ = EX.register_sensor('atT')
     id_dist = EX.register('dist')
     id_sig = EX.register('sig')
+    id_sig_freq = EX.register('freq')
     id_nav, cid_nav = EX.register_sensor('nav')
 
     # register arbiter variable whose purpose is provide a hard-wired response to a conflict
     # between agents 'lt' and 'rt'.
-    id_arbiter = EX.register('arb')
+    id_arbiter = EX.register('ar')
 
     #
     ### Arbitration
@@ -68,6 +79,7 @@ def start_experiment(run_params):
     # arbitration state
     def arbiter(state):
         return bool(rnd(2))
+
     EX.construct_measurable(id_arbiter, arbiter, [bool(rnd(2))], 0, decdep=True)
 
     # intention sensors
@@ -114,6 +126,11 @@ def start_experiment(run_params):
 
     LT = EX.construct_agent(id_lt, id_sig, action_LT, MOTION_PARAMS)
 
+    # OBSERVER agent simply collects implications among the assigned sensors, always active
+    def action_OBS(state):
+        return True
+    OBS = EX.construct_agent(id_obs,id_sig_freq,action_OBS,MOTION_PARAMS) 
+
     #
     ### "mapping" system
     #
@@ -123,136 +140,168 @@ def start_experiment(run_params):
     # select starting position
     START = 0
 
-    # generate target position at distance at least X_BOUND/8 from START position
-    TARGET = X_BOUND/8+rnd(7*X_BOUND)/8
- 
     # effect of motion on position
     id_pos = EX.register('pos')
+
     def motion(state):
         triggers = {id_rt: 1, id_lt: -1}
         diff = 0
         for t in triggers:
             diff += triggers[t] * int(state[t][0])
-        newpos = (state[id_pos][0] + diff) % X_BOUND
-        return newpos
- 
+        return (state[id_pos][0] + diff) % X_BOUND
+        
     EX.construct_measurable(id_pos, motion, [START, START])
 
-    # set up position sensors
-    def xsensor(m,w):  # along x-axis
-        return lambda state: dist(state[id_pos][0],m)<=w
+    # generate target position
+    TARGET = X_BOUND/8+rnd((7*X_BOUND)/8)
 
-    for wid in xrange(1,BEACON_WIDTH):
+    # set up position sensors
+    def xsensor(m,delta):  # along x-axis
+        return lambda state: dist(state[id_pos][0],m)<=delta
+
+    for ind in xrange(X_BOUND):
+        tmp_name = 'x' + str(ind)
+        id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
+        EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
+        RT.add_sensor(id_tmp)
+        LT.add_sensor(id_tmp)
+        OBS.add_sensor(id_tmp)
+
+    # record the semantics of the position sensors:
+    footprints={}
+    for ind in xrange(X_BOUND):
+        footprints['x'+str(ind)]=[0 for pos in xrange(X_BOUND)]
         for pos in xrange(X_BOUND):
-            tmp_name = 'x' + str(pos) + '_' + str(wid)
-            id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
-            EX.construct_sensor(id_tmp, xsensor(pos,wid))  # constructs the measurables associated with the sensor
-            RT.add_sensor(id_tmp)
-            LT.add_sensor(id_tmp)
+            footprints['x'+str(ind)][pos]+=xsensor(ind,BEACON_WIDTH)({id_pos:[pos]})
+    recorder.addendum('footprints',footprints)
 
     # distance to target
-    # - $id_dist$ has already been registerd
+    # - $id_distM$ has already been registerd
     def dist_to_target(state):
         return dist(state[id_pos][0], TARGET)
 
     INIT = dist(START, TARGET)
     EX.construct_measurable(id_dist, dist_to_target, [INIT, INIT])
 
-    ## value signal for agents LT and RT
-    # $id_sig$ has already been registered
+    #
+    ### MOTIVATIONS
+    #
+    def sig_freq(state):
+        return 1.
+    EX.construct_measurable(id_sig_freq,sig_freq,[1.,1.])
 
+    ## value signal for agents LT and RT
     # signal scales with distance to target
-    rescaling = lambda r: r
+    if SnapType=='qualitative':
+        rescaling = lambda r: r
+    else:
+        #SnapType is default
+        rescaling = lambda r: pow(1.-Discount,r-X_BOUND)
+
     def sig(state):
         return rescaling(state[id_dist][0])
+        # initial value for signal:
 
-    # initial value for signal:
     INIT = rescaling(dist(START, TARGET))
     # construct the motivational signal
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
-    def mot(state):
-        return rescaling(state[id_dist][0])-rescaling(state[id_dist][1])<0 or state[id_dist][0]==0
-    EX.construct_sensor(id_nav,mot,[False,False])
-    RT.add_sensor(id_nav)
-    LT.add_sensor(id_nav)
+    if MOTION_PARAMS['AutoTarg']:
+        # if auto-targeting mode is on, do nothing
+        pass
+    else:
+        # otherwise, construct and assign the nav sensor
+        if SnapType=='qualitative':
+            def nav(state):
+                return state[id_sig][0]<state[id_sig][1] or state[id_dist][0]==0
+        else:
+            def nav(state):
+                return state[id_sig][0]>state[id_sig][1] or state[id_dist][0]==0
+        EX.construct_sensor(id_nav,nav,[False,False])
+        # Add nav sensor to agents
+        RT.add_sensor(id_nav)
+        LT.add_sensor(id_nav)
+        OBS.add_sensor(id_nav)
 
     # -------------------------------------init--------------------------------------------
 
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
 
-    # ONE UPDATE CYCLE (without action) TO "FILL" THE STATE DEQUES
-    EX.update_state([cid_rt, cid_lt])
-
     #client data objects for the experiment
     UMACD={}
     for agent_id in EX._AGENTS:
         for token in ['plus','minus']:
             UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
+
     # ASSIGN TARGET IF NOT AUTOMATED:
     if MOTION_PARAMS['AutoTarg']:
         pass
     else:
         # SET ARTIFICIAL TARGET ONCE AND FOR ALL
-        for agent in [RT,LT]:
+        for agent_id in EX._AGENTS:
             for token in ['plus','minus']:
-                tmp_target=agent.generate_signal([id_nav],token).value().tolist()
-                UMACD[(agent._ID,token)].setTarget(tmp_target)
+                tmp_target=EX._AGENTS[agent_id].generate_signal([id_nav],token).value().tolist()
+                UMACD[(agent_id,token)].setTarget(tmp_target)
 
-        # ANOTHER UPDATE CYCLE (without action)
-        EX.update_state([cid_rt,cid_lt])   
-
-
-    # INTRODUCE DELAYED BEACON SENSORS:
-    for agent in [RT, LT]:
+    # INTRODUCE DELAYED GPS SENSORS:
+    for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
-            delay_sigs = [agent.generate_signal(['x'+str(ind)+'_'+str(wid)],token) for ind in xrange(X_BOUND) for wid in xrange(1,BEACON_WIDTH)]
-            agent.delay(delay_sigs, token)
-
+            delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
+            EX._AGENTS[agent_id].delay(delay_sigs, token)
 
     # -------------------------------------RUN--------------------------------------------
-    recorder=experiment_output(EX,run_params)
 
     ## Random walk period
-    while EX.this_state(id_count) < BURN_IN_CYCLES:
+    while EX.this_state(id_count) <= BURN_IN_CYCLES:
         # update the state
-        instruction=[(id_lt if rnd(2) else cid_lt),(id_rt if rnd(2) else cid_rt)]
+        instruction=[
+            (id_lt if rnd(2) else cid_lt),  #random instruction for LT
+            (id_rt if rnd(2) else cid_rt),  #random instruction for RT
+            id_obs,                           #OBS should always be active
+            ]
         #instruction = [(id_lt if (EX.this_state(id_count) / X_BOUND) % 2 == 0 else cid_lt),
                        #(id_rt if (EX.this_state(id_count) / X_BOUND) % 2 == 1 else cid_rt)]
         EX.update_state(instruction)
         recorder.record()
 
     ## Main loop
-    while EX.this_state(id_count) < TOTAL_CYCLES:
+    while EX.this_state(id_count) <= TOTAL_CYCLES:
         # make decisions, update the state
         EX.update_state()
         recorder.record()
 
+    # Wrap up and collect garbage
     recorder.close()
-
-    #print "%s is done!\n" % test_name
+    EX.remove_experiment()
 
 
 if __name__ == "__main__":
     RUN_PARAMS={
+        'AutoTarg':True,
+        'SnapType':'qualitative',
         'env_length':int(sys.argv[1]),
+        'beacon_width':2,
         'total_cycles':int(sys.argv[3]),
         'burn_in_cycles':int(sys.argv[2]),
         'name':sys.argv[4],
         'ex_dataQ':False,
         'agent_dataQ':False,
-        'mids_to_record':['count','dist','sig'],
+        'mids_to_record':['counter','dist','sig'],
         'Nruns':1,
-        'beacon_width':3,
+        'host':'localhost',
+        'port':8000,
         }
     
-    DIRECTORY=".\\"+RUN_PARAMS['name']
+    DIRECTORY=os.path.join(os.getcwd(),RUN_PARAMS['name'])
     TEST_NAME=RUN_PARAMS['name']+'_0'
     
-    os.mkdir(DIRECTORY)
-    preamblef=open(DIRECTORY+"\\"+RUN_PARAMS['name']+'.pre','wb')
-    cPickle.dump(RUN_PARAMS,preamblef)
+    try:
+        os.mkdir(DIRECTORY)
+    except:
+        pass
+    preamblef=open(os.path.join(DIRECTORY,RUN_PARAMS['name']+'.pre'),'wb')
+    json.dump(RUN_PARAMS,preamblef)
     preamblef.close()
         
-    start_experiment(RUN_PARAMS,TEST_NAME)
+    start_experiment(RUN_PARAMS)

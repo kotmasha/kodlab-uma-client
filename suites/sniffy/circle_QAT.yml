@@ -2,15 +2,15 @@
 
 script: sniffy_circle
 func: start_experiment
-Nruns: 5
+Nruns: 10
 
 params:
   SnapType: qualitative
   AutoTarg: True
   circumference: 20
-  beacon_width: 2
-  total_cycles: 500
-  burn_in_cycles: 400
+  beacon_width: 4
+  total_cycles: 1000
+  burn_in_cycles: 900
   ex_dataQ: False
   agent_dataQ: False
   name: circle_AT

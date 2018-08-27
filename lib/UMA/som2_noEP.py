@@ -3,9 +3,9 @@ from collections import deque
 from itertools import *
 from numpy.random import randint as rnd
 import numpy as np
-import cPickle
 from client.UMARest import *
 
+import os
 import uuid
 import time
 import json
@@ -360,7 +360,6 @@ class Experiment(object):
             :param id_agent: the agent id, must provide, cannot be None
             :param id_motivation: id for phi value
             :param definition: definition of the agent
-            :param decdep: bool indicating whether the agent is decision dependent
             :param params: other parameters for the agent
             :return: agent if succeed, None if fail
             """
@@ -866,7 +865,7 @@ class experiment_output():
         self._preamble=preamble
 
         #Append mid info from experiment to preamble for overwriting
-        preamble_file_name=".\\"+preamble['name']+"\\"+preamble['name']+".pre"
+        preamble_file_name=os.path.join(os.getcwd(),preamble['name'],preamble['name']+".pre")
         preamblef=open(preamble_file_name,'wb')
 
         #Add list of agents to preamble
@@ -894,12 +893,17 @@ class experiment_output():
             self._preamble['agent_data_recorded']=[]
 
         #Update the preamble file
-        cPickle.dump(self._preamble,preamblef,protocol=cPickle.HIGHEST_PROTOCOL)
+        json.dump(self._preamble,preamblef)
         preamblef.close()
 
         #Designated filename for UNBUFFERED recording in binary mode
-        output_file_name=".\\"+preamble['name']+"\\"+experiment._EXPERIMENT_ID+".dat"
+        output_file_name=os.path.join(os.getcwd(),preamble['name'],experiment._EXPERIMENT_ID+".dat")
         self._outfile=open(output_file_name,'wb',int(unbufferedQ))
+
+        #Dict and file for recording supplementary run information
+        supp_file_name=os.path.join(os.getcwd(),preamble['name'],experiment._EXPERIMENT_ID+".sup")
+        self._supfile=open(supp_file_name,'wb')
+        self._supplementary={}
 
     def record(self):
         out_dict={}
@@ -916,11 +920,15 @@ class experiment_output():
             for mid in self._ex._AGENTS.keys():
                 out_dict['agent_data_recorded'][mid]=[self._ex._UPDATE_CYCLE_REPORTS[mid][tag] for tag in self._preamble['agent_data_recorded']]
 
-        cPickle.dump(out_dict,self._outfile,protocol=cPickle.HIGHEST_PROTOCOL)
+        json.dump(out_dict,self._outfile)
+        self._outfile.write('\n')
 
+    def addendum(self,tag,item):
+        self._supplementary[tag]=item
 
     def close(self):
         #close the output file
         #recording past this point will produce an error
+        json.dump(self._supplementary,self._supfile)
+        self._supfile.close()
         self._outfile.close()
-
