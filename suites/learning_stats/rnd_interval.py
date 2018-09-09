@@ -33,15 +33,22 @@ def start_experiment(run_params):
     # Parameters and definitions
     AutoTarg=bool(run_params['AutoTarg'])
     SnapType=run_params['SnapType']
+    Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
+
+    # parameters
+    X_BOUND = run_params['env_length']  # length
+    #discount coefficient, if any:
     try:
         Discount=float(run_params['discount'])
     except KeyError:
-        Discount=None
+        Discount=0.875
+    #implication threshold, defaulting to the square of the probability of a single position.
+    try:
+        Threshold=float(run_params['threshold'])
+    except KeyError:
+        Threshold=1./pow(X_BOUND+1.,2)
 
-    # Environment
-    X_BOUND = run_params['env_length']  # length
-
-
+    # Environment description
     def in_bounds(pos):
         return (pos >= 0 and pos <= X_BOUND)
 
@@ -49,28 +56,50 @@ def start_experiment(run_params):
     def dist(p, q):
         return abs(p - q)
 
-    # "Qualitative" agent parameters
+    # agent parameters according to .yml file
 
     MOTION_PARAMS = {
         'type': SnapType,
         'AutoTarg': AutoTarg,
         'discount': Discount,
+        'threshold': Threshold,
     }
 
     # register basic motion agents;
     # - $True$ tag means they will be marked as dependent (on other agents)
     id_rt, cid_rt = EX.register_sensor('rt')
     id_lt, cid_lt = EX.register_sensor('lt')
+    #Register "observer" agent:
+    #  This agent remains inactive throghout the experiment, in order to record 
+    #  all the UNCONDITIONAL implications among the initial sensors (in its 'minus'
+    #  snapshot).
+    #  For this purpose, each sensor's FOOTPRINT in the state space (positions in
+    #  the interval) is recorded, so that implications may be calaculated according
+    #  to the inclusions among footprints.
     id_obs,cid_obs=EX.register_sensor('obs')
 
     # register motivation for motion agents
     # - this one is NOT dependent on agents except through the position, so
     #   it carries the default False tag.
-    id_at_targ, cid_at_targ = EX.register_sensor('atT')
     id_dist = EX.register('dist')
+    # Value signals for different setups determined as a function of distance to target
     id_sig = EX.register('sig')
-    id_sig_freq = EX.register('freq')
-    id_nav, cid_nav = EX.register_sensor('nav')
+    # ...which function? THIS function:
+    RESCALING={
+        'qualitative':{
+            'uniform': lambda r: r,
+            'value-based': lambda r: r,
+            },
+        'discounted':{
+            'uniform': lambda r: 1,
+            'value-based': lambda r: pow(1.-Discount,r-X_BOUND),
+            },
+        'empirical':{
+            'uniform': lambda r: 1,
+            'value-based': lambda r: X_BOUND+1-r,
+            },
+        }
+    rescaling=RESCALING[SnapType][Variation]
 
     # register arbiter variable whose purpose is provide a hard-wired response to a conflict
     # between agents 'lt' and 'rt'.
@@ -133,8 +162,8 @@ def start_experiment(run_params):
     # OBSERVER agent simply collects implications among the assigned sensors, always inactive
     def action_OBS(state):
         return False
-    OBS = EX.construct_agent(id_obs,id_sig_freq,action_OBS,MOTION_PARAMS) 
-
+    OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
+    
     #
     ### "mapping" system
     #
@@ -163,7 +192,7 @@ def start_experiment(run_params):
     # generate target position
     TARGET = START
     while dist(TARGET, START) < X_BOUND / 8:
-        TARGET = X_BOUND / 4 + rnd(X_BOUND / 2)
+        TARGET = rnd(X_BOUND+1)
 
     # set up position sensors
     def xsensor(footprint):  # along x-axis
@@ -189,49 +218,22 @@ def start_experiment(run_params):
     # - $id_distM$ has already been registerd
     def dist_to_target(state):
         return dist(state[id_pos][0], TARGET)
-
     INIT = dist(START, TARGET)
     EX.construct_measurable(id_dist, dist_to_target, [INIT, INIT])
 
     #
     ### MOTIVATIONS
     #
-    def sig_freq(state):
-        return 1.
-    EX.construct_measurable(id_sig_freq,sig_freq,[1.,1.])
 
-    ## value signal for agents LT and RT
-    # signal scales with distance to target
-    if SnapType=='qualitative':
-        rescaling = lambda r: r
-    else:
-        #SnapType is default
-        rescaling = lambda r: pow(1.-Discount,r-X_BOUND)
-
+    #construct the motivational signal for agents RT,LT and OBS:
     def sig(state):
         return rescaling(state[id_dist][0])
-        # initial value for signal:
-
-    INIT = rescaling(dist(START, TARGET))
-    # construct the motivational signal
+    INIT = rescaling(dist(START,TARGET))
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
-    if MOTION_PARAMS['AutoTarg']:
-        # if auto-targeting mode is on, do nothing
-        pass
-    else:
-        # otherwise, construct and assign the nav sensor
-        if SnapType=='qualitative':
-            def nav(state):
-                return state[id_sig][0]<state[id_sig][1] or state[id_dist][0]==0
-        else:
-            def nav(state):
-                return state[id_sig][0]>state[id_sig][1] or state[id_dist][0]==0
-        EX.construct_sensor(id_nav,nav,[False,False])
-        # Add nav sensor to agents
-        RT.add_sensor(id_nav)
-        LT.add_sensor(id_nav)
-        OBS.add_sensor(id_nav)
+    #record the value at each position
+    VALUES=[rescaling(dist(ind,TARGET)) for ind in xrange(X_BOUND+1)]
+
 
     # -------------------------------------init--------------------------------------------
 
@@ -267,7 +269,7 @@ def start_experiment(run_params):
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
-
+    recorder.addendum('values',VALUES)
 
     # -------------------------------------RUN--------------------------------------------
 
@@ -279,8 +281,6 @@ def start_experiment(run_params):
             (id_rt if rnd(2) else cid_rt),  #random instruction for RT
             cid_obs,                           #OBS should always be inactive
             ]
-        #instruction = [(id_lt if (EX.this_state(id_count) / X_BOUND) % 2 == 0 else cid_lt),
-                       #(id_rt if (EX.this_state(id_count) / X_BOUND) % 2 == 1 else cid_rt)]
         EX.update_state(instruction)
         recorder.record()
 
@@ -293,33 +293,3 @@ def start_experiment(run_params):
     # Wrap up and collect garbage
     recorder.close()
     EX.remove_experiment()
-
-
-if __name__ == "__main__":
-    RUN_PARAMS={
-        'AutoTarg':True,
-        'SnapType':'qualitative',
-        'env_length':int(sys.argv[1]),
-        'total_cycles':int(sys.argv[3]),
-        'burn_in_cycles':int(sys.argv[2]),
-        'name':sys.argv[4],
-        'ex_dataQ':False,
-        'agent_dataQ':False,
-        'mids_to_record':['counter','dist','sig'],
-        'Nruns':1,
-        'host':'localhost',
-        'port':8000,
-        }
-    
-    DIRECTORY=os.path.join(os.getcwd(),RUN_PARAMS['name'])
-    TEST_NAME=RUN_PARAMS['name']+'_0'
-    
-    try:
-        os.mkdir(DIRECTORY)
-    except:
-        pass
-    preamblef=open(os.path.join(DIRECTORY,RUN_PARAMS['name']+'.pre'),'wb')
-    json.dump(RUN_PARAMS,preamblef)
-    preamblef.close()
-        
-    start_experiment(RUN_PARAMS)

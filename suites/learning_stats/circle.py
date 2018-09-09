@@ -206,6 +206,8 @@ def start_experiment(run_params):
     INIT = rescaling(dist(START, TARGET))
     # construct the motivational signal
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
+    VALUES=[rescaling(dist(TARGET,ind)) for ind in xrange(X_BOUND+1)]
+
 
     if MOTION_PARAMS['AutoTarg']:
         # if auto-targeting mode is on, do nothing
@@ -258,6 +260,7 @@ def start_experiment(run_params):
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
+    recorder.addendum('values',VALUES)
 
 
     # -------------------------------------RUN--------------------------------------------

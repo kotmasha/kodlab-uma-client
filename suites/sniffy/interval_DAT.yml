@@ -2,7 +2,7 @@
 
 script: sniffy_linear
 func: start_experiment
-Nruns: 20
+Nruns: 3
 
 params:
   SnapType: default

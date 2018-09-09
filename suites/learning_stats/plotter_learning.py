@@ -40,8 +40,17 @@ def get_pickles(infile):
     for item in infile:
         yield json.loads(item)
 
+def compi(x):
+    if type(x)==type(0):
+        return x+1 if x%2==0 else x-1
+    else:
+        raise Exception('Input to \"compi\" must be an integer! \n')
+
+def fcomp(x):
+    #assuming x is a footprint and an np.array:
+    return 1-x
+
 def convert_implications(matr):
-    compi=lambda x: x+1 if x%2==0 else x-1
     L=len(matr)
     for i in range(L):
         for j in range(L):
@@ -51,7 +60,8 @@ def convert_implications(matr):
     return np.matrix(matr,dtype=int)
 
 def ellone(x,y):
-    #assuming x,y are np arrays of the same shape
+    #assuming x,y are np arrays of the same shape, 
+    #return the ell-1 distance between them:
     return np.sum(np.abs(x-y))
 
 
@@ -162,9 +172,19 @@ GROUND_IMP=[]
 IMPS=[]
 DIVS=[]
 for ind in xrange(NRUNS):
-    FP=SUPP[ind]['footprints']
-    L=len(FP)
-    imp_check=lambda x,y: all([i<=j for i,j in zip(x,y)])
+    FP=[np.array(item) for item in SUPP[ind]['footprints']] #for each run, load its sensor footprints
+    VM=np.array(SUPP[ind]['values']) #for each run, load the values of each position
+    L=len(FP) #the number of footprint vectors
+
+    if preamble['SnapType']=='qualitative':
+        #qualitative implications among the footprints:
+        lookup_val=lambda x,y: np.PINF if not sum(x*y) else np.extract(x*y,VM).min()
+        imp_check=lambda x,y: lookup_val(x,fcomp(y))>max(lookup_val(x,y),lookup_val(fcomp(x),fcomp(y)))
+    else:
+        #standard implications (inclusions) among footprints:
+        imp_check=lambda x,y: all(x<=y)
+
+
     #ground truth implications:
     GROUND_IMP.append(np.matrix([[imp_check(FP[xind],FP[yind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))
     #construct implications from observer agent's "minus" snapshot:
@@ -173,7 +193,7 @@ for ind in xrange(NRUNS):
     for t in xrange(len(DATA['counter'][ind])):
         tmp_matr=convert_implications(DATA[('obs','implications')][ind][t]['minus'][:L:])
         run_imps.append(tmp_matr)
-        run_divs.append(ellone(tmp_matr.T,GROUND_IMP[ind]))
+        run_divs.append(ellone(tmp_matr,GROUND_IMP[ind]))
     IMPS.append(run_imps)
     DIVS.append(run_divs)
 

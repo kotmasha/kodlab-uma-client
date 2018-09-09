@@ -2,14 +2,15 @@
 
 script: rnd_interval
 func: start_experiment
-Nruns: 5
+Nruns: 1
 
 params:
   SnapType: qualitative
   AutoTarg: True
-  env_length: 4
-  total_cycles: 100
-  burn_in_cycles: 100
+  Variation: value-based
+  env_length: 10
+  total_cycles: 1000
+  burn_in_cycles: 1000
   ex_dataQ: True
   agent_dataQ: True
   name: rnd_interval_QAT
