@@ -29,14 +29,15 @@ def start_experiment(run_params):
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
-    BURN_IN_CYCLES = run_params['burn_in_cycles']
     # Parameters and definitions
-    AutoTarg=bool(run_params['AutoTarg'])
+    AutoTarg=True #bool(run_params['AutoTarg'])
     SnapType=run_params['SnapType']
     Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
+    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
 
     # Parameters
-    X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
+    X_BOUND = run_params['env_length']  # no. of edges in discrete circle = no. of beacon sensors
+    BEACON_WIDTH = run_params['beacon_width'] # [max] width of beacon sensor
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
@@ -44,13 +45,13 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND+1.,2)
+        Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
-        return (pos >= 0 and pos <= X_BOUND)
+        return (pos >= 0 and pos < X_BOUND)
     def dist(p, q):
-        return abs(p - q) #distance between two points in environment
+        return min(abs(p - q),X_BOUND-abs(p-q)) #distance between two points in environment
 
     # agent parameters according to .yml file
 
@@ -61,10 +62,6 @@ def start_experiment(run_params):
         'threshold': Threshold,
     }
 
-    # register basic motion agents;
-    # - $True$ tag means they will be marked as dependent (on other agents)
-    id_rt, cid_rt = EX.register_sensor('rt')
-    id_lt, cid_lt = EX.register_sensor('lt')
     #Register "observer" agent:
     #  This agent remains inactive throghout the experiment, in order to record 
     #  all the UNCONDITIONAL implications among the initial sensors (in its 'minus'
@@ -88,72 +85,15 @@ def start_experiment(run_params):
             },
         'discounted':{
             'uniform': lambda r: 1,
-            'value-based': lambda r: pow(1.-Discount,r-X_BOUND),
+            'value-based': lambda r: pow(1.-Discount,r-(X_BOUND/2)),
             },
         'empirical':{
             'uniform': lambda r: 1,
-            'value-based': lambda r: X_BOUND+1-r,
+            'value-based': lambda r: (X_BOUND/2)-r,
             },
         }
     rescaling=RESCALING[SnapType][Variation]
 
-    # register arbiter variable whose purpose is provide a hard-wired response to a conflict
-    # between agents 'lt' and 'rt'.
-    id_arbiter = EX.register('ar')
-
-    #
-    ### Arbitration
-    #
-
-    # arbitration state
-    def arbiter(state):
-        return bool(rnd(2))
-
-    EX.construct_measurable(id_arbiter, arbiter, [bool(rnd(2))], 0, decdep=True)
-
-    # intention sensors
-    id_toRT, cid_toRT = EX.register_sensor('toR')
-
-    def intention_RT(state):
-        return id_rt in state[id_dec][0]
-
-    EX.construct_sensor(id_toRT, intention_RT, decdep=False)
-
-    id_toLT, cid_toLT = EX.register_sensor('toL')
-
-    def intention_LT(state):
-        return id_lt in state[id_dec][0]
-
-    EX.construct_sensor(id_toLT, intention_LT, decdep=False)
-
-    # failure mode for action $lt^rt$
-    id_toF, cid_toF = EX.register_sensor('toF')
-
-    def about_to_enter_failure_mode(state):
-        return state[id_toLT][0] and state[id_toRT][0]
-
-    EX.construct_sensor(id_toF, about_to_enter_failure_mode, decdep=False)
-
-    # add basic motion agents with arbitration
-    def action_RT(state):
-        rt_decided = (id_rt in state[id_dec][0])
-        if state[id_toF][0]:
-            # return not(rt_decided) if state[id_arbiter][0] else rt_decided
-            return state[id_arbiter][0]
-        else:
-            return rt_decided
-
-    RT = EX.construct_agent(id_rt, id_sig, action_RT, MOTION_PARAMS)
-
-    def action_LT(state):
-        lt_decided = (id_lt in state[id_dec][0])
-        if state[id_toF][0]:
-            # return lt_decided if state[id_arbiter][0] else not(lt_decided)
-            return not (state[id_arbiter][0])
-        else:
-            return lt_decided
-
-    LT = EX.construct_agent(id_lt, id_sig, action_LT, MOTION_PARAMS)
 
     # OBSERVER agent simply collects implications among the assigned sensors, always inactive
     def action_OBS(state):
@@ -167,50 +107,52 @@ def start_experiment(run_params):
     ## introduce agent's position
 
     # select starting position
-    START = rnd(X_BOUND + 1)
+    START = rnd(X_BOUND)
 
     # effect of motion on position
     id_pos = EX.register('pos')
 
-    def motion(state):
-        triggers = {id_rt: 1, id_lt: -1}
-        diff = 0
-        for t in triggers:
-            diff += triggers[t] * int(state[t][0])
-        newpos = state[id_pos][0] + diff
-        if in_bounds(newpos):
-            return newpos
-        else:
-            return state[id_pos][0]
+    def random_walk(state):
+        diff = 2*rnd(2)-1
+        newpos = (state[id_pos][0] + diff) % X_BOUND
+        return newpos
 
-    EX.construct_measurable(id_pos, motion, [START, START])
+    def lazy_random_walk(state):
+        diff = rnd(3)-1
+        newpos = (state[id_pos][0] + diff) % X_BOUND
+        return newpos
+
+    def teleport(state):
+        return rnd(X_BOUND)
+
+    motion={'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
     # generate target position
     TARGET = START
     while dist(TARGET, START)==0:
-        TARGET = rnd(X_BOUND+1)
+        TARGET = rnd(X_BOUND)
+
 
     # set up position sensors
-    def xsensor(footprint):  # along x-axis
-        return lambda state: bool(footprint[state[id_pos][0]])
-    def make_footprint():
-        return [rnd(2) for ind in xrange(X_BOUND+1)]
+    def xsensor(m,width):  # along x-axis
+        return lambda state: dist(state[id_pos][0],m)<=width
 
-    #generate randomized position sensors and record their semantics
+    # Construct initial sensors and record their semantics
     FOOTPRINTS=[]
     all_comp=lambda x: [1-t for t in x]
     for ind in xrange(X_BOUND):
+        # create new beacon sensor centered at $ind$
         tmp_name = 'x' + str(ind)
-        tmp_footprint=make_footprint()
+        id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
+        EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
+        OBS.add_sensor(id_tmp)
+        # record the sensor footprint
+        tmp_footprint=[(1 if dist(pos,ind)<=BEACON_WIDTH else 0) for pos in xrange(X_BOUND)]
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
-        id_tmp, id_tmpc = EX.register_sensor(tmp_name)
-        EX.construct_sensor(id_tmp,xsensor(tmp_footprint))
-        RT.add_sensor(id_tmp)
-        LT.add_sensor(id_tmp)
-        OBS.add_sensor(id_tmp)
 
-    # distance to target
+    # Distance to target
     # - $id_distM$ has already been registerd
     def dist_to_target(state):
         return dist(state[id_pos][0], TARGET)
@@ -221,14 +163,14 @@ def start_experiment(run_params):
     ### MOTIVATIONS
     #
 
-    #construct the motivational signal for agents RT,LT and OBS:
+    #construct the motivational signal for OBS:
     def sig(state):
         return rescaling(state[id_dist][0])
     INIT = rescaling(dist(START,TARGET))
     EX.construct_measurable(id_sig, sig, [INIT, INIT])
 
     #record the value at each position
-    VALUES=[rescaling(dist(ind,TARGET)) for ind in xrange(X_BOUND+1)]
+    VALUES=[rescaling(dist(ind,TARGET)) for ind in xrange(X_BOUND)]
 
 
     # -------------------------------------init--------------------------------------------
@@ -242,26 +184,19 @@ def start_experiment(run_params):
         for token in ['plus','minus']:
             UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
 
-    # ASSIGN TARGET IF NOT AUTOMATED:
-    if MOTION_PARAMS['AutoTarg']:
-        pass
-    else:
-        # SET ARTIFICIAL TARGET ONCE AND FOR ALL
-        for agent_id in EX._AGENTS:
-            for token in ['plus','minus']:
-                tmp_target=EX._AGENTS[agent_id].generate_signal([id_nav],token).value().tolist()
-                UMACD[(agent_id,token)].setTarget(tmp_target)
-
-    # INTRODUCE DELAYED GPS SENSORS:
     QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
-            delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
-            EX._AGENTS[agent_id].delay(delay_sigs, token)
+
+            # INTRODUCE DELAYED GPS SENSORS:
+            #delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
+            #EX._AGENTS[agent_id].delay(delay_sigs, token)
+
+            # MAKE A LIST OF ALL SENSOR LABELS FOR EACH AGENT
             QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
     # START RECORDING
-    EX.update_state([cid_lt,cid_rt,cid_obs])
+    EX.update_state([cid_obs])
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
@@ -269,21 +204,13 @@ def start_experiment(run_params):
 
     # -------------------------------------RUN--------------------------------------------
 
-    ## Random walk period
-    while EX.this_state(id_count) <= BURN_IN_CYCLES:
+    ## Main Loop:
+    while EX.this_state(id_count) <= TOTAL_CYCLES:
         # update the state
         instruction=[
-            (id_lt if rnd(2) else cid_lt),  #random instruction for LT
-            (id_rt if rnd(2) else cid_rt),  #random instruction for RT
-            cid_obs,                           #OBS should always be inactive
+            cid_obs,    #OBS should always be inactive
             ]
         EX.update_state(instruction)
-        recorder.record()
-
-    ## Main loop
-    while EX.this_state(id_count) <= TOTAL_CYCLES:
-        # make decisions, update the state
-        EX.update_state()
         recorder.record()
 
     # Wrap up and collect garbage

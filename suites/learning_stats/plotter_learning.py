@@ -173,6 +173,7 @@ DIFFS=[]
 for ind in xrange(NRUNS):
     FP=[np.array(item) for item in SUPP[ind]['footprints']] #for each run, load its sensor footprints
     VM=np.array(SUPP[ind]['values']) #for each run, load the values of each position
+    #print VM
     L=len(FP) #the number of footprint vectors
 
     if preamble['SnapType']=='qualitative':
@@ -182,7 +183,6 @@ for ind in xrange(NRUNS):
     else:
         #standard implications (inclusions) among footprints:
         imp_check=lambda x,y: all(x<=y)
-
 
     #ground truth implications:
     GROUND_IMP.append(np.matrix([[imp_check(FP[xind],FP[yind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))
@@ -196,7 +196,7 @@ for ind in xrange(NRUNS):
         run_diffs.append(ellone(tmp_matr.T,GROUND_IMP[ind]))
     IMPS.append(run_imps)
     DIFFS.append(run_diffs)
-    #print IMPS[-1][200]
+    #print IMPS[-1][5]
 
 #for ind in xrange(NRUNS):
 #    print SUPP[ind]['footprints']

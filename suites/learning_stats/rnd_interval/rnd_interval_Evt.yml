@@ -1,0 +1,20 @@
+# The yml file for sniffy, name, script and fun are must have
+
+script: rnd_interval
+func: start_experiment
+Nruns: 5
+
+params:
+  SnapType: empirical
+  AutoTarg: True
+  Variation: value-based
+  Mode: teleport
+  env_length: 20
+  total_cycles: 1000
+  ex_dataQ: True
+  agent_dataQ: True
+  name: rnd_interval_Evt
+  mids_to_record:
+    - counter
+    - dist
+    - sig

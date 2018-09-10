@@ -2,19 +2,18 @@
 
 script: rnd_interval
 func: start_experiment
-Nruns: 5
+Nruns: 10
 
 params:
-  SnapType: discounted
+  SnapType: qualitative
   AutoTarg: True
-  Variation: uniform
-  discount: 0.875
+  Variation: value-based
+  Mode: walk
   env_length: 10
-  total_cycles: 1000
-  burn_in_cycles: 1000
+  total_cycles: 500
   ex_dataQ: True
   agent_dataQ: True
-  name: rnd_interval_DATu
+  name: rnd_interval_Qw
   mids_to_record:
     - counter
     - dist
