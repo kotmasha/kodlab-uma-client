@@ -35,26 +35,22 @@ def start_experiment(run_params):
     SnapType=run_params['SnapType']
     Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
 
-    # parameters
-    X_BOUND = run_params['env_length']  # length
-    #discount coefficient, if any:
+    # Parameters
+    X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
     try:
-        Discount=float(run_params['discount'])
+        Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
         Discount=0.875
-    #implication threshold, defaulting to the square of the probability of a single position.
     try:
-        Threshold=float(run_params['threshold'])
+        Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
         Threshold=1./pow(X_BOUND+1.,2)
 
     # Environment description
     def in_bounds(pos):
         return (pos >= 0 and pos <= X_BOUND)
-
-    # distance function
     def dist(p, q):
-        return abs(p - q)
+        return abs(p - q) #distance between two points in environment
 
     # agent parameters according to .yml file
 
@@ -80,11 +76,11 @@ def start_experiment(run_params):
 
     # register motivation for motion agents
     # - this one is NOT dependent on agents except through the position, so
-    #   it carries the default False tag.
+    #   it carries the default "decdep=False" tag.
     id_dist = EX.register('dist')
-    # Value signals for different setups determined as a function of distance to target
+    # Value signals for different setups determined as a *function* of distance to target
     id_sig = EX.register('sig')
-    # ...which function? THIS function:
+    # ...which function? THIS function (see $rescaling$ below):
     RESCALING={
         'qualitative':{
             'uniform': lambda r: r,
@@ -191,7 +187,7 @@ def start_experiment(run_params):
 
     # generate target position
     TARGET = START
-    while dist(TARGET, START) < X_BOUND / 8:
+    while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND+1)
 
     # set up position sensors

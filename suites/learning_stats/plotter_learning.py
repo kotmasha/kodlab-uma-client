@@ -32,7 +32,6 @@ import matplotlib.animation as animation
 # - Additional preamble values are experiment-dependent.
 #   For SNIFFY, we have:
 #   'env_length'        -   The size of SNIFFY's environment
-#   'burn_in_cycles'    -   Length (in cycles) of initial period of randomized behavior
 #   'total_cycles'      -   Length (in cycles) of the whole run   
 #--------------------------------------------------------------------------------------
 
@@ -170,7 +169,7 @@ for ind in xrange(NRUNS):
 #Construct implications matrices for each run
 GROUND_IMP=[]
 IMPS=[]
-DIVS=[]
+DIFFS=[]
 for ind in xrange(NRUNS):
     FP=[np.array(item) for item in SUPP[ind]['footprints']] #for each run, load its sensor footprints
     VM=np.array(SUPP[ind]['values']) #for each run, load the values of each position
@@ -187,15 +186,17 @@ for ind in xrange(NRUNS):
 
     #ground truth implications:
     GROUND_IMP.append(np.matrix([[imp_check(FP[xind],FP[yind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))
+    #print GROUND_IMP[-1]
     #construct implications from observer agent's "minus" snapshot:
     run_imps=[]
-    run_divs=[]
+    run_diffs=[]
     for t in xrange(len(DATA['counter'][ind])):
         tmp_matr=convert_implications(DATA[('obs','implications')][ind][t]['minus'][:L:])
-        run_imps.append(tmp_matr)
-        run_divs.append(ellone(tmp_matr,GROUND_IMP[ind]))
+        run_imps.append(tmp_matr.T)
+        run_diffs.append(ellone(tmp_matr.T,GROUND_IMP[ind]))
     IMPS.append(run_imps)
-    DIVS.append(run_divs)
+    DIFFS.append(run_diffs)
+    #print IMPS[-1][200]
 
 #for ind in xrange(NRUNS):
 #    print SUPP[ind]['footprints']
@@ -231,13 +232,11 @@ plt.ylabel('l1-distance to ground truth implication matrix',fontsize=16)
 
 #Form the plots
 t=np.array(DATA['counter'][0])
-dmean=np.mean(np.array(DIVS),axis=0)
-dstd=np.std(np.array(DIVS),axis=0)
+dmean=np.mean(np.array(DIFFS),axis=0)
+dstd=np.std(np.array(DIFFS),axis=0)
 
 plt.plot(t,dmean,'-r',alpha=1,label='Mean over '+str(NRUNS)+' runs')
 plt.fill_between(t,dmean-dstd,dmean+dstd,alpha=0.2,color='r',label='std. deviation over '+str(NRUNS)+' runs')
-ymin,ymax=plt.ylim()
-plt.plot([preamble['burn_in_cycles'],preamble['burn_in_cycles']],[ymin,ymax],'-bo',label='training period ends')
 ax.legend()
 
 #Show the plots
