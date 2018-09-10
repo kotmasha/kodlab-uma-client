@@ -477,6 +477,14 @@ class Experiment(object):
                     ## compute and report duration of decision cycle:
                     self._UPDATE_CYCLE_REPORTS[mid]['exiting_decision_cycle']=time.clock()
                     
+                    ## report internal logical state:
+                    self._UPDATE_CYCLE_REPORTS[mid]['implications']={}
+                    self._UPDATE_CYCLE_REPORTS[mid]['delay_masks']={}
+                    for token in ['plus','minus']:
+                        umacd=UMAClientData(self._EXPERIMENT_ID,mid,token,self._service)
+                        self._UPDATE_CYCLE_REPORTS[mid]['implications'][token]=umacd.get_npdirs()
+                        self._UPDATE_CYCLE_REPORTS[mid]['delay_masks'][token]=umacd.get_mask_amper()
+                                            
                     ## report the agent size:
                     self._UPDATE_CYCLE_REPORTS[mid]['size']=max(agent._SNAPSHOTS['plus']._SIZE,agent._SNAPSHOTS['minus']._SIZE)
                     
@@ -567,6 +575,21 @@ class Snapshot(object):
             self._SNAPSHOT_SERVICE.add_sensor(self._SENSORS[2 * i], self._SENSORS[2 * i + 1])
         self._SNAPSHOT_SERVICE.init()
 
+    def make_sensor_labels(self):
+        #provides an ordered list of labels for all sensors, including the ones on the CPP side
+        umacd=UMAClientData(self._AGENT._EXPERIMENT._EXPERIMENT_ID,self._AGENT._ID,self._ID,self._AGENT._EXPERIMENT._service)
+        sensor_labels=[item for item in self._SENSORS]
+        paren=lambda x: '('+str(x)+')'
+        decode_mask= lambda item: [sid for sid,flag in zip(self._SENSORS,item[:self._SIZE+1:]) if flag] 
+        for item in umacd.get_mask_amper()[self._SIZE/2::]:
+            decoded=decode_mask(item)
+            if len(decoded)==1:
+                label='#'+decoded[0]
+            else:
+                label='#'+paren('^'.join(decoded))
+            sensor_labels.extend([label,name_comp(label)])
+        return sensor_labels
+
 class Agent(object):
     ### initialize an "empty" agent with prescribed learning parameters
     def __init__(self, experiment, id_agent, id_motivation, params, service_agent):
@@ -628,6 +651,9 @@ class Agent(object):
 
         for token in ['plus', 'minus']:
             self._SNAPSHOTS[token].init(self._PARAMS)
+
+    def make_sensor_labels(self,token):
+        return self._SNAPSHOTS[token].make_sensor_labels()
 
     #def validate(self):
     #    snapshot_plus = ServiceSnapshot(self._ID, 'plus', service)
@@ -878,7 +904,7 @@ class experiment_output():
             self._mids=self._ex._MID
         self._preamble['mids_recorded']=self._mids
                     
-        #-record all experiment update cycle data imtes (e.g. time stamps) in preamble 
+        #-record all experiment update cycle data items (e.g. time stamps) in preamble 
         self._ex_dataQ=self._preamble['ex_dataQ']
         if self._ex_dataQ:
             self._preamble['ex_data_recorded']=self._ex._UPDATE_CYCLE_REPORTS['experiment'].keys()
