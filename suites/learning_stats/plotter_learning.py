@@ -174,15 +174,25 @@ for ind in xrange(NRUNS):
     FP=[np.array(item) for item in SUPP[ind]['footprints']] #for each run, load its sensor footprints
     VM=np.array(SUPP[ind]['values']) #for each run, load the values of each position
     #print VM
+    THRESHOLD=SUPP[ind]['threshold'] #for each run, load its implication threshold
     L=len(FP) #the number of footprint vectors
 
+    #Standard implications (inclusions) among footprints:
+    std_imp_check=lambda x,y: all(x<=y)
+    #Signal- and type-dependent implications
     if preamble['SnapType']=='qualitative':
-        #qualitative implications among the footprints:
+        #Qualitative implications among the footprints:
+        #- compute minimum value in the intersection of two footprints:
         lookup_val=lambda x,y: np.PINF if not sum(x*y) else np.extract(x*y,VM).min()
+        #- check for implication x->y (x and y are footprints):
         imp_check=lambda x,y: lookup_val(x,fcomp(y))>max(lookup_val(x,y),lookup_val(fcomp(x),fcomp(y)))
     else:
-        #standard implications (inclusions) among footprints:
-        imp_check=lambda x,y: all(x<=y)
+        #Thresholded value-based implications
+        #- compute the ground-truth weight of the intersection of two footprints:
+        lookup_val=lambda x,y: sum(x*y*VM)
+        #- check for thresholded implication based on ground truth weight
+        imp_check=lambda x,y: lookup_val(x,fcomp(y))<min(sum(VM)*THRESHOLD,lookup_val(x,y),lookup_val(fcomp(x),fcomp(y)),lookup_val(fcomp(x),y)) or (lookup_val(x,fcomp(y))==0 and lookup_val(y,fcomp(x))==0)
+
 
     #ground truth implications:
     GROUND_IMP.append(np.matrix([[imp_check(FP[xind],FP[yind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))

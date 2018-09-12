@@ -202,6 +202,7 @@ def start_experiment(run_params):
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('values',VALUES)
+    recorder.addendum('threshold',Threshold)
 
     # -------------------------------------RUN--------------------------------------------
 

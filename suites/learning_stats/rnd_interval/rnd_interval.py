@@ -154,8 +154,6 @@ def start_experiment(run_params):
         FOOTPRINTS.append(all_comp(tmp_footprint))
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)
         EX.construct_sensor(id_tmp,xsensor(tmp_footprint))
-        RT.add_sensor(id_tmp)
-        LT.add_sensor(id_tmp)
         OBS.add_sensor(id_tmp)
 
     # distance to target
@@ -207,6 +205,7 @@ def start_experiment(run_params):
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('values',VALUES)
+    recorder.addendum('threshold',Threshold)
 
     # -------------------------------------RUN--------------------------------------------
 
