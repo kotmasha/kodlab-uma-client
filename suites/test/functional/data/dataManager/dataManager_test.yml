@@ -1,0 +1,352 @@
+# This is the test for Data Manager
+
+create an experiment:
+  method: POST
+  url: /UMA/object/experiment
+  status_code: 201
+  message: Experiment=test_experiment is created
+  data:
+    experiment_id: test_experiment
+
+create an agent:
+  method: POST
+  url: /UMA/object/agent
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    type: default
+
+create an snapshot:
+  method: POST
+  url: /UMA/object/snapshot
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+
+create sensor0:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor0
+    c_sid: c_sensor0
+    d: [[True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor1:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor1
+    c_sid: c_sensor1
+    d: [[False, False, False, True], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor2:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor2
+    c_sid: c_sensor2
+    d: [[False, False, False, False], [False, False, False, True], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor3:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor3
+    c_sid: c_sensor3
+    d: [[False, False, False, True], [False, False, False, False], [False, False, False, False], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+create sensor4:
+  method: POST
+  url: /UMA/object/sensor
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    sensor_id: sensor4
+    c_sid: c_sensor4
+    d: [[False, False, False, False], [False, False, False, True], [True, False, False, False], [True, False, False, False], [True, False, False, True]]
+    w: [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]]
+    diag: []
+
+set observe:
+  method: PUT
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    observe: [True, False, False, True, True, False, False, False, False, True]
+
+get observe:
+  method: GET
+  url: /UMA/data/observe
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    observe: [True, False, False, True, True, False, False, False, False, True]
+
+set current:
+  method: PUT
+  url: /UMA/data/current
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    current: [True, False, False, True, True, False, False, False, False, True]
+
+get current:
+  method: GET
+  url: /UMA/data/current
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    current: [True, False, False, True, True, False, False, False, False, True]
+
+set current:
+  method: PUT
+  url: /UMA/data/current
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    current: [True, False, False, True, True, False, False, False, False, True]
+
+get current:
+  method: GET
+  url: /UMA/data/current
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    current: [True, False, False, True, True, False, False, False, False, True]
+
+npdirs:
+  method: POST
+  url: /UMA/simulation/npdirs
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    npdirs:
+    - [True, False]
+    - [False, True]
+    - [False, False, True, False]
+    - [False, True, False, True]
+    - [False, False, False, False, True, False]
+    - [False, True, False, True, False, True]
+    - [False, False, False, False, False, False, True, False]
+    - [False, True, False, True, False, False, False, True]
+    - [False, False, False, False, True, False, True, False, True, False]
+    - [False, True, False, True, False, False, False, False, False, True]
+
+get npdirs:
+  method: GET
+  url: /UMA/data/npdirs
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    npdirs:
+    - [True, False]
+    - [False, True]
+    - [False, False, True, False]
+    - [False, True, False, True]
+    - [False, False, False, False, True, False]
+    - [False, True, False, True, False, True]
+    - [False, False, False, False, False, False, True, False]
+    - [False, True, False, True, False, False, False, True]
+    - [False, False, False, False, True, False, True, False, True, False]
+    - [False, True, False, True, False, False, False, False, False, True]
+
+get weights:
+  method: GET
+  url: /UMA/data/weights
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.25]
+      - [0.25, 0.25]
+      - [0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+
+get dirs:
+  method: GET
+  url: /UMA/data/dirs
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    dirs:
+      - [True]
+      - [False, True]
+      - [False, False, True]
+      - [False, True, False, True]
+      - [False, False, False, False, True]
+      - [False, False, False, True, False, True]
+      - [False, False, False, False, False, False, True]
+      - [False, True, False, False, False, False, False, True]
+      - [False, False, False, False, True, False, True, False, True]
+      - [False, False, False, True, False, False, False, False, False, True]
+      
+get thresholds:
+  method: GET
+  url: /UMA/data/thresholds
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    thresholds:
+      - [0.125]
+      - [0.125, 0.125]
+      - [0.125, 0.125, 0.125]
+      - [0.125, 0.125, 0.125, 0.125]
+      - [0.125, 0.125, 0.125, 0.125, 0.125]
+
+get data size:
+  method: GET
+  url: /UMA/data/dataSize
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    sizes:
+      _sensor_size: 5
+      _sensor_size_max: 6
+      _sensor2d_size: 15
+      _sensor2d_size_max: 21
+      _attr_sensor_size: 10
+      _attr_sensor_size_max: 12
+      _attr_sensor2d_size: 55
+      _attr_sensor2d_size_max: 78
+      _mask_amper_size: 30
+      _mask_amper_size_max: 42
+      _npdir_size: 60
+      _npdir_size_max: 84
+
+delay 0&2&5:
+  method: POST
+  url: /UMA/object/snapshot/delay
+  status_code: 201
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+    delay_lists: [[True, False, True, False, False, True, False, False, False, False]]
+    uuid_lists: [['sensorX', 'c_sensorX']]
+
+get mask amper:
+  method: GET
+  url: /UMA/data/maskAmper
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    mask_amper:
+      - [False, False]
+      - [False, False, False, False]
+      - [False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False]
+      - [False, False, False, False, False, False, False, False, False, False]
+      - [True, False, True, False, False, True, False, False, False, False, False, False]
+
+delete agent:
+  method: DELETE
+  url: /UMA/object/agent
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+    agent_id: test_agent
+
+delete experiment:
+  method: DELETE
+  url: /UMA/object/experiment
+  status_code: 200
+  data:
+    experiment_id: test_experiment
+  message: Experiment=test_experiment is deleted
+
+tests:
+  - create an experiment
+  - create an agent
+  - create an snapshot
+  - create sensor0
+  - create sensor1
+  - create sensor2
+  - create sensor3
+  - create sensor4
+  - set observe
+  - get observe
+  - npdirs
+  - get npdirs
+  - get weights
+  - get dirs
+  - get thresholds
+  - get data size
+  - delay 0&2&5
+  - get mask amper
+  - delete agent
+  - delete experiment

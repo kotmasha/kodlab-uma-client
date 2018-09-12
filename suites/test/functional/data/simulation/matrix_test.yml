@@ -103,10 +103,17 @@ npdirs:
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
-    npdirs: [True, False, False, True, False, False, True, False, False, True, False, True, False, False, False, False, True, False,
-    False, True, False, True, False, True, False, False, False, False, False, False, True, False,
-    False, True, False, True, False, False, False, True, False, False, False, False, True, False, True, False, True, False,
-    False, True, False, True, False, False, False, False, False, True]
+    npdirs:
+    - [True, False]
+    - [False, True]
+    - [False, False, True, False]
+    - [False, True, False, True]
+    - [False, False, False, False, True, False]
+    - [False, True, False, True, False, True]
+    - [False, False, False, False, False, False, True, False]
+    - [False, True, False, True, False, False, False, True]
+    - [False, False, False, False, True, False, True, False, True, False]
+    - [False, True, False, True, False, False, False, False, False, True]
 
 ups 0 2 4 6 8:
   method: POST
