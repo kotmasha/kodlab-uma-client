@@ -187,11 +187,6 @@ def start_experiment(run_params):
     QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
-
-            # INTRODUCE DELAYED GPS SENSORS:
-            #delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
-            #EX._AGENTS[agent_id].delay(delay_sigs, token)
-
             # MAKE A LIST OF ALL SENSOR LABELS FOR EACH AGENT
             QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
@@ -201,15 +196,14 @@ def start_experiment(run_params):
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('values',VALUES)
+    recorder.addendum('threshold',Threshold)
 
     # -------------------------------------RUN--------------------------------------------
 
     ## Main Loop:
     while EX.this_state(id_count) <= TOTAL_CYCLES:
         # update the state
-        instruction=[
-            cid_obs,    #OBS should always be inactive
-            ]
+        instruction=[cid_obs] # ensuring agent OBS is always inactive
         EX.update_state(instruction)
         recorder.record()
 
