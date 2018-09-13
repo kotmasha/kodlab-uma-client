@@ -33,7 +33,7 @@ def start_experiment(run_params):
     AutoTarg=True #bool(run_params['AutoTarg'])
     SnapType=run_params['SnapType']
     Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
-    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
+    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'simple'/'teleport'/'walk'/'lazy'
 
     # Parameters
     X_BOUND = run_params['env_length']  # no. of edges in discrete circle = no. of beacon sensors
@@ -45,7 +45,10 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND,2)
+        if SnapType=='qualitative':
+            Threshold=0.
+        else:
+            Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
@@ -112,6 +115,10 @@ def start_experiment(run_params):
     # effect of motion on position
     id_pos = EX.register('pos')
 
+    def walk_through(state):
+        newpos = (state[id_pos][0] + 1) % X_BOUND
+        return newpos
+
     def random_walk(state):
         diff = 2*rnd(2)-1
         newpos = (state[id_pos][0] + diff) % X_BOUND
@@ -125,7 +132,7 @@ def start_experiment(run_params):
     def teleport(state):
         return rnd(X_BOUND)
 
-    motion={'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    motion={'simple':walk_through,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
     # generate target position

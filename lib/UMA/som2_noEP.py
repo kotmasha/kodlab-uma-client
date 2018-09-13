@@ -478,11 +478,15 @@ class Experiment(object):
                     self._UPDATE_CYCLE_REPORTS[mid]['exiting_decision_cycle']=time.clock()
                     
                     ## report internal logical state:
-                    self._UPDATE_CYCLE_REPORTS[mid]['implications']={}
+                    self._UPDATE_CYCLE_REPORTS[mid]['weights']={}
+                    self._UPDATE_CYCLE_REPORTS[mid]['raw_implications']={}
+                    self._UPDATE_CYCLE_REPORTS[mid]['full_implications']={}
                     self._UPDATE_CYCLE_REPORTS[mid]['delay_masks']={}
                     for token in ['plus','minus']:
                         umacd=UMAClientData(self._EXPERIMENT_ID,mid,token,self._service)
-                        self._UPDATE_CYCLE_REPORTS[mid]['implications'][token]=umacd.get_npdirs()
+                        self._UPDATE_CYCLE_REPORTS[mid]['weights'][token]=umacd.get_weights()
+                        self._UPDATE_CYCLE_REPORTS[mid]['raw_implications'][token]=umacd.get_dirs()
+                        self._UPDATE_CYCLE_REPORTS[mid]['full_implications'][token]=umacd.get_npdirs()
                         self._UPDATE_CYCLE_REPORTS[mid]['delay_masks'][token]=umacd.get_mask_amper()
                                             
                     ## report the agent size:

@@ -44,7 +44,10 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND+1.,2)
+        if SnapType=='qualitative':
+            Threshold=0.
+        else:
+            Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
