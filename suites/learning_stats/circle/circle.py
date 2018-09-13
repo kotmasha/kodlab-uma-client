@@ -135,11 +135,22 @@ def start_experiment(run_params):
     motion={'simple':walk_through,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
-    # generate target position
+    #Generate target position
     TARGET = START
     while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND)
 
+    #Construct upper/lower bound estimates on target position
+    #- upper bound:
+    id_targ_top=EX.register('ttop')
+    def target_top(state):
+        return TARGET
+    EX.construct_measurable(id_targ_top,target_top,[(TARGET,TARGET)],depth=0)    
+    #- lower bound:
+    id_targ_bot=EX.register('tbot')
+    def target_bot(state):
+        return TARGET
+    EX.construct_measurable(id_targ_bot,target_bot,[(TARGET,TARGET)],depth=0)    
 
     # set up position sensors
     def xsensor(m,width):  # along x-axis

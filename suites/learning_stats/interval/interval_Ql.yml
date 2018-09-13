@@ -2,7 +2,7 @@
 
 script: interval
 func: start_experiment
-Nruns: 10
+Nruns: 4
 
 params:
   SnapType: qualitative
@@ -10,7 +10,7 @@ params:
   Variation: value-based
   Mode: lazy
   env_length: 10
-  total_cycles: 100
+  total_cycles: 500
   ex_dataQ: True
   agent_dataQ: True
   name: interval_Ql
@@ -18,3 +18,5 @@ params:
     - counter
     - dist
     - sig
+    - ttop
+    - tbot
