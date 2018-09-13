@@ -2,7 +2,7 @@
 
 script: circle
 func: start_experiment
-Nruns: 2
+Nruns: 4
 
 params:
   SnapType: qualitative
@@ -19,3 +19,5 @@ params:
     - counter
     - dist
     - sig
+    - ttop
+    - tbot

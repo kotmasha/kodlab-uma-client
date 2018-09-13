@@ -133,13 +133,40 @@ def start_experiment(run_params):
     def teleport(state):
         return rnd(X_BOUND+1)
 
-    motion={'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    def back_and_forth(state):
+        last_diff=state[id_pos][0]-state[id_pos][1]
+        thispos=state[id_pos][0]
+        if last_diff!=0:
+            newpos=thispos+last_diff
+            if in_bounds(newpos):
+                return newpos
+            else:
+                return thispos-last_diff
+        else:
+            if thispos<X_BOUND:
+                return thispos+1
+            else:
+                return thispos-1
+
+    motion={'simple':back_and_forth,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
     # generate target position
     TARGET = START
     while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND+1)
+
+    #Construct upper/lower bound estimates on target position
+    #- upper bound:
+    id_targ_top=EX.register('ttop')
+    def target_top(state):
+        return TARGET
+    EX.construct_measurable(id_targ_top,target_top,[(TARGET,TARGET)],depth=0)    
+    #- lower bound:
+    id_targ_bot=EX.register('tbot')
+    def target_bot(state):
+        return TARGET
+    EX.construct_measurable(id_targ_bot,target_bot,[(TARGET,TARGET)],depth=0)    
 
     # set up position sensors
     def xsensor(m):  # along x-axis
