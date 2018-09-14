@@ -33,7 +33,7 @@ def start_experiment(run_params):
     AutoTarg=True #bool(run_params['AutoTarg'])
     SnapType=run_params['SnapType']
     Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
-    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
+    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'simple'/'teleport'/'walk'/'lazy'
 
     # Parameters
     X_BOUND = run_params['env_length']  # no. of edges in discrete circle = no. of beacon sensors
@@ -45,7 +45,10 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND,2)
+        if SnapType=='qualitative':
+            Threshold=0.
+        else:
+            Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
@@ -112,6 +115,10 @@ def start_experiment(run_params):
     # effect of motion on position
     id_pos = EX.register('pos')
 
+    def walk_through(state):
+        newpos = (state[id_pos][0] + 1) % X_BOUND
+        return newpos
+
     def random_walk(state):
         diff = 2*rnd(2)-1
         newpos = (state[id_pos][0] + diff) % X_BOUND
@@ -125,14 +132,25 @@ def start_experiment(run_params):
     def teleport(state):
         return rnd(X_BOUND)
 
-    motion={'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    motion={'simple':walk_through,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
-    # generate target position
+    #Generate target position
     TARGET = START
     while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND)
 
+    #Construct upper/lower bound estimates on target position
+    #- upper bound:
+    id_targ_top=EX.register('ttop')
+    def target_top(state):
+        return TARGET
+    EX.construct_measurable(id_targ_top,target_top,[(TARGET,TARGET)],depth=0)    
+    #- lower bound:
+    id_targ_bot=EX.register('tbot')
+    def target_bot(state):
+        return TARGET
+    EX.construct_measurable(id_targ_bot,target_bot,[(TARGET,TARGET)],depth=0)    
 
     # set up position sensors
     def xsensor(m,width):  # along x-axis
@@ -187,11 +205,6 @@ def start_experiment(run_params):
     QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
         for token in ['plus', 'minus']:
-
-            # INTRODUCE DELAYED GPS SENSORS:
-            #delay_sigs = [EX._AGENTS[agent_id].generate_signal(['x' + str(ind)], token) for ind in xrange(X_BOUND)]
-            #EX._AGENTS[agent_id].delay(delay_sigs, token)
-
             # MAKE A LIST OF ALL SENSOR LABELS FOR EACH AGENT
             QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
@@ -201,15 +214,14 @@ def start_experiment(run_params):
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('values',VALUES)
+    recorder.addendum('threshold',Threshold)
 
     # -------------------------------------RUN--------------------------------------------
 
     ## Main Loop:
     while EX.this_state(id_count) <= TOTAL_CYCLES:
         # update the state
-        instruction=[
-            cid_obs,    #OBS should always be inactive
-            ]
+        instruction=[cid_obs] # ensuring agent OBS is always inactive
         EX.update_state(instruction)
         recorder.record()
 

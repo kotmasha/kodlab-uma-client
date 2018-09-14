@@ -248,7 +248,7 @@ class UMAClientData:
 
     def getTarget(self):
         return self._service.get('/UMA/data/target', {'experiment_id': self._experiment_id,
-                                    'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                                    'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['target']
 
     def getNegligible(self):
         return self._service.get('/UMA/data/negligible', {'experiment_id': self._experiment_id,
@@ -261,6 +261,11 @@ class UMAClientData:
     def get_dirs(self):
         return self._service.get('/UMA/data/dirs', {'experiment_id': self._experiment_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['dirs']
+
+    #added by dang:
+    def get_weights(self):
+        return self._service.get('/UMA/data/weights', {'experiment_id': self._experiment_id,
+                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['weights']
 
     def get_propagate_masks(self):
         return self._service.get('/UMA/data/propagateMasks', {'experiment_id': self._experiment_id,

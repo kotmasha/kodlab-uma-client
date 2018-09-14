@@ -2,7 +2,7 @@
 
 script: rnd_interval
 func: start_experiment
-Nruns: 10
+Nruns: 4
 
 params:
   SnapType: qualitative
@@ -18,3 +18,5 @@ params:
     - counter
     - dist
     - sig
+    - ttop
+    - tbot

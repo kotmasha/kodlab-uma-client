@@ -44,7 +44,10 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND+1.,2)
+        if SnapType=='qualitative':
+            Threshold=0.
+        else:
+            Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
@@ -98,7 +101,8 @@ def start_experiment(run_params):
     def action_OBS(state):
         return False
     OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
-    
+    OBSCD=UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
+
     #
     ### "mapping" system
     #
@@ -130,7 +134,22 @@ def start_experiment(run_params):
     def teleport(state):
         return rnd(X_BOUND+1)
 
-    motion={'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    def back_and_forth(state):
+        last_diff=state[id_pos][0]-state[id_pos][1]
+        thispos=state[id_pos][0]
+        if last_diff!=0:
+            newpos=thispos+last_diff
+            if in_bounds(newpos):
+                return newpos
+            else:
+                return thispos-last_diff
+        else:
+            if thispos<X_BOUND:
+                return thispos+1
+            else:
+                return thispos-1
+
+    motion={'simple':back_and_forth,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motion[Mode],[START,START])
 
     # generate target position
@@ -152,6 +171,14 @@ def start_experiment(run_params):
         OBS.add_sensor(id_tmp)
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
+
+    #Construct footprint-type estimate of target position
+    id_targ_footprint=EX.register('targ_foot')
+    def target_footprint(state):
+        targ=OBSCD.getTarget()
+        prints=np.array([fp for index,fp in zip(targ,FOOTPRINTS) if index])
+        return np.prod(prints,axis=0).tolist()
+    EX.construct_measurable(id_targ_footprint,target_footprint,[np.zeros(X_BOUND+1)],depth=0)    
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -202,6 +229,7 @@ def start_experiment(run_params):
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('values',VALUES)
+    recorder.addendum('threshold',Threshold)
 
     # -------------------------------------RUN--------------------------------------------
 

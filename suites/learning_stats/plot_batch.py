@@ -49,14 +49,60 @@ def fcomp(x):
     #assuming x is a footprint and an np.array:
     return 1-x
 
-def convert_implications(matr):
+# inequality check for qualitative weights: "IS x strictly less than y?"
+def qless(x,y):
+    if x<0: #infinity is never less than anything
+        return False
+    elif y<0: #anything finite is less than infinity
+        return True
+    else: #finite things compared as usual
+        return x<y
+
+# max function for qualitative weights
+def qmax(*args):
+    if min(args)<0:
+        return -1
+    else:
+        return max(args)
+
+def qmin(*args):
+    if max(args)<0:
+        return -1
+    else:
+        return min(filter(lambda x: x>=0, args))
+
+# convert npdirs data into a matrix
+def convert_full_implications(matr):
     L=len(matr)
     for i in range(L):
         for j in range(L):
             if j >= len(matr[i]):
                 matr[i].append(matr[compi(j)][compi(i)])
-
     return np.matrix(matr,dtype=int)
+
+# convert dirs data into a matrix
+def convert_raw_implications(matr):
+    L=len(matr)
+    for i in range(L):
+        for j in range(L):
+            if j >= len(matr[i]):
+                try:
+                    matr[i].append(matr[compi(j)][compi(i)])
+                except IndexError:
+                    matr[i].append(False)
+    return np.matrix(matr,dtype=int)
+
+# convert weights data into a matrix
+def convert_weights(matr):
+    L=len(matr)
+    newmatr=[[] for ind in xrange(L)]
+    for i in xrange(L):
+        for j in xrange(L):
+            if j>=len(matr[i]):
+                newmatr[i].append(matr[j][i])
+            else:
+                newmatr[i].append(matr[i][j])
+    return np.matrix(newmatr,dtype=int)
 
 def ellone(x,y):
     #assuming x,y are np arrays of the same shape, 
@@ -167,37 +213,79 @@ for ind in xrange(NRUNS):
 #
 
 #Construct implications matrices for each run
+#print DATA[('obs','raw_implications')][0][0]['minus']
+#print convert_raw_implications(DATA[('obs','raw_implications')][0][0]['minus'])
+#exit(0)
+GROUND_WEIGHTS=[]
 GROUND_IMP=[]
+WEIGHTS=[]
 IMPS=[]
+IMPS_full=[]
 DIFFS=[]
+DIFFS_full=[]
+VM=[]
 for ind in xrange(NRUNS):
     FP=[np.array(item) for item in SUPP[ind]['footprints']] #for each run, load its sensor footprints
-    VM=np.array(SUPP[ind]['values']) #for each run, load the values of each position
+    vm=np.array(SUPP[ind]['values']) #for each run, load the values of each position
+    VM.append(vm)
     #print VM
+    THRESHOLD=SUPP[ind]['threshold'] #for each run, load its implication threshold
     L=len(FP) #the number of footprint vectors
 
+    #Standard implications (inclusions) among footprints:
+    std_imp_check=lambda x,y: all(x<=y)
+    #Signal- and type-dependent implications
     if preamble['SnapType']=='qualitative':
-        #qualitative implications among the footprints:
-        lookup_val=lambda x,y: np.PINF if not sum(x*y) else np.extract(x*y,VM).min()
-        imp_check=lambda x,y: lookup_val(x,fcomp(y))>max(lookup_val(x,y),lookup_val(fcomp(x),fcomp(y)))
+        #Qualitative implications among the footprints:
+        #- compute minimum value in the intersection of two footprints:
+        lookup_val=lambda x,y: -1 if not sum(x*y) else np.extract(x*y,vm).min()
+        #- check for implication x->y (x and y are footprints):
+        imp_check=lambda x,y: qless(qmax(lookup_val(x,y),lookup_val(fcomp(x),fcomp(y))),lookup_val(x,fcomp(y)))
     else:
-        #standard implications (inclusions) among footprints:
-        imp_check=lambda x,y: all(x<=y)
+        #Thresholded value-based implications
+        #- compute the ground-truth weight of the intersection of two footprints:
+        lookup_val=lambda x,y: sum(x*y*vm)
+        #- check for thresholded implication based on ground truth weight
+        imp_check=lambda x,y: lookup_val(x,fcomp(y))<min(sum(vm)*THRESHOLD,lookup_val(x,y),lookup_val(fcomp(x),fcomp(y)),lookup_val(fcomp(x),y)) or (lookup_val(x,fcomp(y))==0 and lookup_val(y,fcomp(x))==0)
+
 
     #ground truth implications:
-    GROUND_IMP.append(np.matrix([[imp_check(FP[xind],FP[yind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))
+    GROUND_WEIGHTS.append(convert_weights([[lookup_val(FP[yind],FP[xind]) for xind in xrange(yind+1)] for yind in xrange(L)]))
+    GROUND_IMP.append(np.matrix([[imp_check(FP[yind],FP[xind]) for xind in xrange(L)] for yind in xrange(L)],dtype=int))
     #print GROUND_IMP[-1]
     #construct implications from observer agent's "minus" snapshot:
+    run_weights=[]
     run_imps=[]
+    run_imps_full=[]
     run_diffs=[]
+    run_diffs_full=[]
     for t in xrange(len(DATA['counter'][ind])):
-        tmp_matr=convert_implications(DATA[('obs','implications')][ind][t]['minus'][:L:])
-        run_imps.append(tmp_matr.T)
-        run_diffs.append(ellone(tmp_matr.T,GROUND_IMP[ind]))
+        tmp_weights_matr=convert_weights(DATA[('obs','weights')][ind][t]['minus'])
+        tmp_matr=convert_raw_implications(DATA[('obs','raw_implications')][ind][t]['minus'])
+        tmp_matr_full=convert_full_implications(DATA[('obs','full_implications')][ind][t]['minus'])
+        run_weights.append(tmp_weights_matr)
+        run_imps.append(tmp_matr)
+        run_imps_full.append(tmp_matr_full)
+        run_diffs.append(ellone(tmp_matr,GROUND_IMP[ind]))
+        run_diffs_full.append(ellone(tmp_matr_full,GROUND_IMP[ind]))
+    WEIGHTS.append(run_weights)
     IMPS.append(run_imps)
+    IMPS_full.append(run_imps_full)
     DIFFS.append(run_diffs)
-    #print IMPS[-1][5]
+    DIFFS_full.append(run_diffs_full)
 
+#K=0
+#print VM[K]
+#print '\n'
+#print GROUND_WEIGHTS[K]-WEIGHTS[K][100]
+#print '\n'
+#print WEIGHTS[K][100]
+#print '\n'
+#print GROUND_IMP[K]
+#print '\n'
+#print IMPS[K][100]-GROUND_IMP[0]
+
+#exit(0)
 #for ind in xrange(NRUNS):
 #    print SUPP[ind]['footprints']
 #    print GROUND_IMP[ind]
@@ -233,10 +321,14 @@ plt.ylabel('l1-distance to ground truth implication matrix',fontsize=16)
 #Form the plots
 t=np.array(DATA['counter'][0])
 dmean=np.mean(np.array(DIFFS),axis=0)
-dstd=np.std(np.array(DIFFS),axis=0)
+dmean_full=np.mean(np.array(DIFFS_full),axis=0)
 
-plt.plot(t,dmean,'-r',alpha=1,label='Mean over '+str(NRUNS)+' runs')
+dstd=np.std(np.array(DIFFS),axis=0)
+dstd_full=np.std(np.array(DIFFS_full),axis=0)
+plt.plot(t,dmean,'-r',alpha=1,label='Mean raw imps difference over '+str(NRUNS)+' runs')
+plt.plot(t,dmean_full,'-b',alpha=1,label='Mean full imps difference over '+str(NRUNS)+' runs')
 plt.fill_between(t,dmean-dstd,dmean+dstd,alpha=0.2,color='r',label='std. deviation over '+str(NRUNS)+' runs')
+plt.fill_between(t,dmean_full-dstd_full,dmean_full+dstd_full,alpha=0.2,color='b',label='std. deviation over '+str(NRUNS)+' runs')
 ax.legend()
 
 #Show the plots

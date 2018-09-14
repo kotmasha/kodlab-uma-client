@@ -19,3 +19,5 @@ params:
     - counter
     - dist
     - sig
+    - ttop
+    - tbot
