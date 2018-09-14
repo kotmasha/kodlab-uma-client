@@ -101,7 +101,8 @@ def start_experiment(run_params):
     def action_OBS(state):
         return False
     OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
-    
+    OBSCD=UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
+
     #
     ### "mapping" system
     #
@@ -156,18 +157,6 @@ def start_experiment(run_params):
     while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND+1)
 
-    #Construct upper/lower bound estimates on target position
-    #- upper bound:
-    id_targ_top=EX.register('ttop')
-    def target_top(state):
-        return TARGET
-    EX.construct_measurable(id_targ_top,target_top,[(TARGET,TARGET)],depth=0)    
-    #- lower bound:
-    id_targ_bot=EX.register('tbot')
-    def target_bot(state):
-        return TARGET
-    EX.construct_measurable(id_targ_bot,target_bot,[(TARGET,TARGET)],depth=0)    
-
     # set up position sensors
     def xsensor(m):  # along x-axis
         return lambda state: state[id_pos][0] < m + 1
@@ -182,6 +171,14 @@ def start_experiment(run_params):
         OBS.add_sensor(id_tmp)
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
+
+    #Construct footprint-type estimate of target position
+    id_targ_footprint=EX.register('targ_foot')
+    def target_footprint(state):
+        targ=OBSCD.getTarget()
+        prints=np.array([fp for index,fp in zip(targ,FOOTPRINTS) if index])
+        return np.prod(prints,axis=0).tolist()
+    EX.construct_measurable(id_targ_footprint,target_footprint,[np.zeros(X_BOUND+1)],depth=0)    
 
     # distance to target
     # - $id_distM$ has already been registerd

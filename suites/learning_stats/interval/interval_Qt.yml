@@ -9,14 +9,14 @@ params:
   AutoTarg: True
   Variation: value-based
   Mode: teleport
-  env_length: 10
-  total_cycles: 500
+  env_length: 20
+  total_cycles: 200
   ex_dataQ: True
   agent_dataQ: True
   name: interval_Qt
   mids_to_record:
     - counter
+    - pos
     - dist
     - sig
-    - ttop
-    - tbot
+    - targ_foot
