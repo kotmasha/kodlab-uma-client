@@ -120,8 +120,9 @@ class UMAClientExperiment(UMAClientObject):
     def get_experiment_id(self):
         return self._experiment_id
 
-    def add_agent(self, agent_id, type='default'):
-        data = {'experiment_id': self._experiment_id, 'agent_id': agent_id, 'type': type}
+    def add_agent(self, agent_id, **kwargs):
+        data = {'experiment_id': self._experiment_id, 'agent_id': agent_id}
+        data.update(kwargs)
         result = self._service.post('/UMA/object/agent', data)
         if not result:
             print "create agent=%s failed!" % agent_id

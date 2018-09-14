@@ -372,7 +372,7 @@ class Experiment(object):
             # construct new agent (Python and C++)
             try:
                 #trying to pass along type specification to the UMA core
-                agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent, type=params['type'])
+                agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent, **params)
             except KeyError:
                 #if no type specification, use the default
                 agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent)
