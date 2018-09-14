@@ -248,7 +248,7 @@ class UMAClientData:
 
     def getTarget(self):
         return self._service.get('/UMA/data/target', {'experiment_id': self._experiment_id,
-                                    'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                                    'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['target']
 
     def getNegligible(self):
         return self._service.get('/UMA/data/negligible', {'experiment_id': self._experiment_id,
