@@ -212,7 +212,11 @@ supp_file.close()
 # Prepare the plots (EXPERIMENT-SPECIFIC)
 #
 
-# value of each position in the environment
+# length of the environment (due to differences between circle and interval)
+ENV_LENGTH=len(SUPP['values'])
+# duration of the experiment
+DURATION=len(DATA['counter'])
+# value of each position in the environment, needed as np.array
 VM=np.array(SUPP['values'])
 # extreme (=target) value
 V_EXTREME=VM.min() if preamble['SnapType']=='qualitative' else VM.max()
@@ -252,7 +256,7 @@ RAW_IMPS=[]
 FULL_IMPS=[]
 RAW_DIFFS=[]
 FULL_DIFFS=[]
-for t in xrange(len(DATA['counter'])):
+for t in xrange(DURATION):
     #- learned weight matrix at time t:
     #WEIGHTS.append(convert_weights(DATA[('obs','weights')][t]['minus']))
     
@@ -276,11 +280,8 @@ TARGET_GROUND=np.array([[abs(val-V_EXTREME)<pow(10,-10) for t in DATA['counter']
 #- prepare position
 POS=DATA['pos']
 #- prepare upper and lower bounds for target according to observer
-TRAJECTORY=np.zeros((len(VM),len(DATA['counter'])),dtype=int)
-for t in xrange(len(DATA['counter'])):
-    current_footprint=DATA['targ_foot'][t]
-    for ind in xrange(len(VM)):
-        TRAJECTORY[ind,t]+=current_footprint[ind]   
+TARGET_TRAJECTORY=np.array(
+    [[DATA['targ_foot'][t][pos] for t in xrange(DURATION)] for pos in xrange(ENV_LENGTH)])
 
 #
 #Initialize the plots
@@ -305,8 +306,8 @@ ax_env.yaxis.set_ticks(-0.5+np.arange(len(VM)))
 #ax_env.xaxis.set_ticks(-0.5+np.arange(0,len(t),10))
 ax_env.tick_params(labelbottom=True,labelleft=False)
 
-#print TRAJECTORY
-ax_env.imshow(TRAJECTORY, cmap = plt.cm.Blues, vmin = 0, vmax = 1, aspect='auto',interpolation='none',alpha=0.5,extent=(1,len(t)+1,0,len(VM)-1))
+#print TARG_TRAJECTORY
+ax_env.imshow(TARGET_TRAJECTORY, cmap = plt.cm.Blues, vmin = 0, vmax = 1, aspect='auto',interpolation='none',alpha=0.5,extent=(1,len(t)+1,0,len(VM)-1))
 ax_env.imshow(TARGET_GROUND, cmap = plt.cm.Reds, vmin = 0, vmax = 1, aspect='auto',interpolation='none',alpha=0.5,extent=(1,len(t)+1,0,len(VM)-1))
 ax_env.plot(t,np.array(POS),'.r',alpha=1,label='Observer\'s position')
 ax_env.legend()

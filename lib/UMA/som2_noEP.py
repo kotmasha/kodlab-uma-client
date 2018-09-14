@@ -529,12 +529,11 @@ class Experiment(object):
                     # if no definition, set the value according to $action_signal$
                     self.set_state(mid, (mid in action_signal))
             else:
-                try:  
-                    # try updating using definition
-                    self.set_state(mid, (self._DEFS[mid](self._STATE)))
-                except:  
-                    # if no definition available then do nothing; this is a state variable evolving independently of the agent's actions, e.g., a pointer to a data structure.
-                    pass
+                self.set_state(mid, (self._DEFS[mid](self._STATE)))
+                #there was a try clause here:
+                #except:  
+                #    # if no definition available then do nothing; this is a state variable evolving independently of the agent's actions, e.g., a pointer to a data structure.
+                #    print mid #pass
 
         self._UPDATE_CYCLE_REPORTS['experiment']['exiting_update_cycle']=time.clock()
 
