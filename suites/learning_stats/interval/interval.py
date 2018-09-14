@@ -101,7 +101,7 @@ def start_experiment(run_params):
     def action_OBS(state):
         return False
     OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
-    OBSCD=UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
+    OBSCD = UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
 
     #
     ### "mapping" system
@@ -178,7 +178,8 @@ def start_experiment(run_params):
         targ=OBSCD.getTarget()
         prints=np.array([fp for index,fp in zip(targ,FOOTPRINTS) if index])
         return np.prod(prints,axis=0).tolist()
-    EX.construct_measurable(id_targ_footprint,target_footprint,[np.zeros(X_BOUND+1)],depth=0)    
+    INIT=np.zeros(X_BOUND+1).tolist()
+    EX.construct_measurable(id_targ_footprint,target_footprint,[INIT],depth=0)    
 
     # distance to target
     # - $id_distM$ has already been registerd

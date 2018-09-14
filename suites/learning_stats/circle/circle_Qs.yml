@@ -9,15 +9,15 @@ params:
   AutoTarg: True
   Variation: value-based
   Mode: simple
-  env_length: 10
+  env_length: 20
   beacon_width: 2
-  total_cycles: 500
+  total_cycles: 200
   ex_dataQ: True
   agent_dataQ: True
   name: circle_Qs
   mids_to_record:
     - counter
+    - pos
     - dist
     - sig
-    - ttop
-    - tbot
+    - targ_foot
