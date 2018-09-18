@@ -21,21 +21,16 @@ def start_experiment(run_params):
     id_count= 'counter'
 
     # Recording options:
-    record_mids=run_params['mids_to_record'] #[id_count,id_dist,id_sig]
-    record_global=run_params['ex_dataQ'] #True
-    record_agents=run_params['agent_dataQ'] #True
-    #recorder will be initialized later, at the end of the initialization phase,
+    record_mids=run_params['mids_to_record']
+    record_global=run_params['ex_dataQ']
+    record_agents=run_params['agent_dataQ']
+    #A recorder will be initialized later, at the end of the initialization phase,
     #to enable collection of all available data tags
 
     # Decision cycles:
     TOTAL_CYCLES = run_params['total_cycles']
     # Parameters and definitions
-    AutoTarg=True #bool(run_params['AutoTarg'])
-    SnapType=run_params['SnapType']
-    Variation=run_params['Variation'] #snapshot type variation to be used ('uniform' or 'value-based')
-    Mode=run_params['Mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
-
-    # Parameters
+    MODE=run_params['mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
     X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
@@ -44,10 +39,7 @@ def start_experiment(run_params):
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        if SnapType=='qualitative':
-            Threshold=0.
-        else:
-            Threshold=1./pow(X_BOUND,2)
+        Threshold=1./pow(X_BOUND+1,2)
 
     # Environment description
     def in_bounds(pos):
@@ -57,51 +49,73 @@ def start_experiment(run_params):
 
     # agent parameters according to .yml file
 
-    MOTION_PARAMS = {
-        'type': SnapType,
-        'AutoTarg': AutoTarg,
-        'discount': Discount,
+    empirical_observer={
+        'type': 'empirical',
+        'AutoTarg': True,
         'threshold': Threshold,
     }
 
-    #Register "observer" agent:
-    #  This agent remains inactive throghout the experiment, in order to record 
-    #  all the UNCONDITIONAL implications among the initial sensors (in its 'minus'
-    #  snapshot).
+    discounted_observer={
+        'type': 'discounted',
+        'discount': Discount,
+        'AutoTarg': True,
+        'threshold': Threshold,
+    }
+
+    qualitative_observer={
+        'type': 'qualitative',
+        'AutoTarg': True,
+        #'threshold': 0,
+    }
+
+    AGENT_PARAMS={
+        '_Eu':empirical_observer,
+        '_Ev':empirical_observer,
+        '_Q':qualitative_observer,
+        '_Du':discounted_observer,
+        '_Dv':discounted_observer,
+        }
+    ORDERED_TYPES=['_Eu','_Ev','_Du','_Dv']
+ 
+    #Register "observer" agents:
+    #  These agents remain inactive throghout the experiment, in order to record 
+    #  all the UNCONDITIONAL implications among the initial sensors (in their 'minus'
+    #  snapshots).
     #  For this purpose, each sensor's FOOTPRINT in the state space (positions in
-    #  the interval) is recorded, so that implications may be calaculated according
+    #  the interval) is recorded, so that implications may be calculated according
     #  to the inclusions among footprints.
-    id_obs,cid_obs=EX.register_sensor('obs')
+    id_obs={}
+    cid_obs={}
+    for typ in ORDERED_TYPES:
+        id_obs[typ],cid_obs[typ]=EX.register_sensor('obs'+typ)
 
     # register motivation for motion agents
     # - this one is NOT dependent on agents except through the position, so
     #   it carries the default "decdep=False" tag.
-    id_dist = EX.register('dist')
+
     # Value signals for different setups determined as a *function* of distance to target
-    id_sig = EX.register('sig')
-    # ...which function? THIS function (see $rescaling$ below):
+    id_dist = EX.register('dist')
+    id_sig={}
+    for typ in ORDERED_TYPES:
+        id_sig[typ]=EX.register('sig'+typ)
+
+    # ...which function? THIS function:
     RESCALING={
-        'qualitative':{
-            'uniform': lambda r: r,
-            'value-based': lambda r: r,
-            },
-        'discounted':{
-            'uniform': lambda r: 1,
-            'value-based': lambda r: pow(1.-Discount,r-X_BOUND),
-            },
-        'empirical':{
-            'uniform': lambda r: 1,
-            'value-based': lambda r: X_BOUND+1-r,
-            },
+        '_Eu': lambda r: 1,
+        '_Ev': lambda r: X_BOUND-r,
+        '_Q':  lambda r: r,
+        '_Du': lambda r: 1,
+        '_Dv': lambda r: pow(1.-Discount,r-X_BOUND),
         }
-    rescaling=RESCALING[SnapType][Variation]
 
 
-    # OBSERVER agent simply collects implications among the assigned sensors, always inactive
-    def action_OBS(state):
-        return False
-    OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
-    OBSCD = UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
+    # OBSERVER agents simply collect implications among the assigned sensors, always inactive
+    OBSERVERS={}
+    OBSACCESS={}
+    for typ in ORDERED_TYPES:
+        OBSERVERS[typ]=EX.construct_agent(id_obs[typ],id_sig[typ],lambda state: False,AGENT_PARAMS[typ])
+        OBSACCESS[typ]=UMAClientData(EX._EXPERIMENT_ID,id_obs[typ],'minus',EX._service)
+
 
     #
     ### "mapping" system
@@ -110,7 +124,7 @@ def start_experiment(run_params):
     ## introduce agent's position
 
     # select starting position
-    START = rnd(X_BOUND + 1)
+    START = 4
 
     # effect of motion on position
     id_pos = EX.register('pos')
@@ -149,13 +163,13 @@ def start_experiment(run_params):
             else:
                 return thispos-1
 
-    motion={'simple':back_and_forth,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
-    EX.construct_measurable(id_pos,motion[Mode],[START,START])
+    motions={'simple':back_and_forth,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    EX.construct_measurable(id_pos,motions[MODE],[START,START])
 
     # generate target position
-    TARGET = START
-    while dist(TARGET, START)==0:
-        TARGET = rnd(X_BOUND+1)
+    TARGET = 0
+    #while dist(TARGET, START)==0:
+    #    TARGET = rnd(X_BOUND+1)
 
     # set up position sensors
     def xsensor(m):  # along x-axis
@@ -168,18 +182,23 @@ def start_experiment(run_params):
         tmp_footprint=[(1 if pos<ind+1 else 0) for pos in xrange(X_BOUND+1)]
         id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
         EX.construct_sensor(id_tmp, xsensor(ind))  # constructs the measurables associated with the sensor
-        OBS.add_sensor(id_tmp)
+        for typ in ORDERED_TYPES:
+            OBSERVERS[typ].add_sensor(id_tmp)
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
 
     #Construct footprint-type estimate of target position
-    id_targ_footprint=EX.register('targ_foot')
-    def target_footprint(state):
-        targ=OBSCD.getTarget()
-        prints=np.array([fp for index,fp in zip(targ,FOOTPRINTS) if index])
-        return np.prod(prints,axis=0).tolist()
+    id_targ_footprint={}
+    func_tf={}
+    #- prepare update functions
+    for typ in ORDERED_TYPES:
+        func_tf[typ]=lambda state: np.prod(np.array([fp for index,fp in zip(OBSACCESS[typ].getTarget(),FOOTPRINTS) if index]),axis=0).tolist()
+    
+    #- construct target estimate measurable for each observer
     INIT=np.zeros(X_BOUND+1).tolist()
-    EX.construct_measurable(id_targ_footprint,target_footprint,[INIT],depth=0)    
+    for typ in ORDERED_TYPES:
+        id_targ_footprint[typ]=EX.register('targ_foot'+typ)
+        EX.construct_measurable(id_targ_footprint[typ],func_tf[typ],[INIT],depth=0)    
 
     # distance to target
     # - $id_distM$ has already been registerd
@@ -193,25 +212,18 @@ def start_experiment(run_params):
     #
 
     #construct the motivational signal for OBS:
-    def sig(state):
-        return rescaling(state[id_dist][0])
-    INIT = rescaling(dist(START,TARGET))
-    EX.construct_measurable(id_sig, sig, [INIT, INIT])
-
-    #record the value at each position
-    VALUES=[rescaling(dist(ind,TARGET)) for ind in xrange(X_BOUND+1)]
-
+    for typ in ORDERED_TYPES:
+        tmpsig=lambda state: RESCALING[typ](state[id_dist][0])
+        INIT = RESCALING[typ](dist(START,TARGET))
+        EX.construct_measurable(id_sig[typ],tmpsig,[INIT, INIT])
+    
+    #record the value at each position, for each type:
+    VALUES={typ:[RESCALING[typ](dist(pos,TARGET)) for pos in xrange(X_BOUND+1)] for typ in ORDERED_TYPES}
 
     # -------------------------------------init--------------------------------------------
 
     for agent_name in EX._AGENTS:
         EX._AGENTS[agent_name].init()
-
-    #client data objects for the experiment
-    UMACD={}
-    for agent_id in EX._AGENTS:
-        for token in ['plus','minus']:
-            UMACD[(agent_id,token)]=UMAClientData(EX._EXPERIMENT_ID,agent_id,token,EX._service)
 
     QUERY_IDS={agent_id:{} for agent_id in EX._AGENTS}
     for agent_id in EX._AGENTS:
@@ -225,7 +237,8 @@ def start_experiment(run_params):
             QUERY_IDS[agent_id][token]=EX._AGENTS[agent_id].make_sensor_labels(token)
 
     # START RECORDING
-    EX.update_state([cid_obs])
+    default_instruction=[cid_obs[typ] for typ in ORDERED_TYPES]
+    EX.update_state(default_instruction)
     recorder=experiment_output(EX,run_params)
     recorder.addendum('footprints',FOOTPRINTS)
     recorder.addendum('query_ids',QUERY_IDS)
@@ -237,10 +250,7 @@ def start_experiment(run_params):
     ## Main Loop:
     while EX.this_state(id_count) <= TOTAL_CYCLES:
         # update the state
-        instruction=[
-            cid_obs,    #OBS should always be inactive
-            ]
-        EX.update_state(instruction)
+        EX.update_state(default_instruction)
         recorder.record()
 
     # Wrap up and collect garbage

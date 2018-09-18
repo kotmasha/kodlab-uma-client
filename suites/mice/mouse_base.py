@@ -287,6 +287,7 @@ class mouse(obj):
                 self._viewport[item]['bkbox']=ax.text(0.475,0.05,max([ind for ind in xrange(18) if self.angle(ind,'bk')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
                 self._viewport[item]['rtbox']=ax.text(0.9,0.475,max([ind for ind in xrange(18) if self.angle(ind,'rt')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
                 self._viewport[item]['fdbox']=ax.text(0.475,0.9,max([ind for ind in xrange(18) if self.angle(ind,'fd')]),transform=ax.transAxes,fontsize=14,bbox=boxprops)
+                self._viewport[item]['extra']=ax.text(0.05,0.9,self.mdist(),transform=ax.transAxes,fontsize=14,bbox=boxprops)
                 ax.invert_yaxis()
             except KeyError:
                 raise('\n\n===> Mouse must have a \"viewSize\" attribute.\n\n')
@@ -343,6 +344,9 @@ class mouse(obj):
         # pos is assumed to be of type icomplex.
         return (pos-self._pos)*North*self._attr['direction'].conj()
 
+    def mdist(self):
+        return min([(self._pos-self._ar._objects[tag]._pos).ellone() for tag in self._ar._objects.keys() if self._ar._objects[tag]._type=='cheese'])
+
     def updateViewport(self, attribute): # updates the viewport corresponding to a given attribute
         # update the viewport:
         vp=lambda x,y,p: self._ar.attrCalc(p,attribute) if self._ar.inBounds(p) else -1
@@ -359,6 +363,7 @@ class mouse(obj):
         self._viewport[attribute]['bkbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'bk')]))
         self._viewport[attribute]['rtbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'rt')]))
         self._viewport[attribute]['fdbox'].set_text(max([ind for ind in xrange(18) if self.angle(ind,'fd')]))
+        self._viewport[attribute]['extra'].set_text(self.mdist())
 
 
     #-----------------------------measurements---------------------------------
@@ -459,7 +464,7 @@ def main():
             #else:
             #    arena.updateHeatmap('elevation')
             arena.updateHeatmapFull('elevation')
-            mouse.updateHeatmapFull('elevation')
+            mouse.updateViewport('elevation')
             arena._fig.show()
             mouse._viewport['elevation']['fig'].canvas.draw()
             mouse._viewport['elevation']['fig'].canvas.flush_events()

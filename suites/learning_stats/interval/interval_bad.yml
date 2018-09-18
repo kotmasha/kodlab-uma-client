@@ -5,12 +5,9 @@ func: start_experiment
 Nruns: 1
 
 params:
-  SnapType: qualitative
-  AutoTarg: True
-  Variation: value-based
-  Mode: walk
-  env_length: 15
-  total_cycles: 30
+  mode: teleport
+  env_length: 10
+  total_cycles: 100
   ex_dataQ: True
   agent_dataQ: True
   name: interval_single
@@ -18,5 +15,8 @@ params:
     - counter
     - pos
     - dist
-    - sig
-    - targ_foot
+    - targ_foot_Q
+    - targ_foot_Eu
+    - targ_foot_Ev
+    - targ_foot_Du
+    - targ_foot_Dv
