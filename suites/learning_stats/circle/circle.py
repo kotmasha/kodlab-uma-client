@@ -51,8 +51,6 @@ def start_experiment(run_params):
             Threshold=1./pow(X_BOUND,2)
 
     # Environment description
-    def in_bounds(pos):
-        return (pos >= 0 and pos < X_BOUND)
     def dist(p, q):
         return min(abs(p - q),X_BOUND-abs(p-q)) #distance between two points in environment
 

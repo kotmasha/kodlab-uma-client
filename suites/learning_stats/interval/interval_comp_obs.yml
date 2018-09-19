@@ -1,22 +1,22 @@
 # The yml file for sniffy, name, script and fun are must have
 
-script: interval_bad
+script: interval_comp_obs
 func: start_experiment
 Nruns: 1
 
 params:
-  mode: simple
+  mode: lazy
   env_length: 20
-  total_cycles: 100
+  total_cycles: 200
   ex_dataQ: True
   agent_dataQ: True
-  name: interval_bad
+  name: comp_obs
   mids_to_record:
     - counter
     - pos
     - dist
-    - targ_foot_Q
-    - targ_foot_Eu
-    - targ_foot_Ev
-    - targ_foot_Du
-    - targ_foot_Dv
+    - targ_Q
+    - targ_Eu
+    - targ_Ev
+    - targ_Du
+    - targ_Dv

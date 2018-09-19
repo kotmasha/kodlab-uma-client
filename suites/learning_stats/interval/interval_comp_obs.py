@@ -33,6 +33,7 @@ def start_experiment(run_params):
     # Parameters and definitions
     MODE=run_params['mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
     X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
+
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
@@ -125,7 +126,7 @@ def start_experiment(run_params):
     ## introduce agent's position
 
     # select starting position
-    START = 4
+    START = rnd(X_BOUND+1)
 
     # effect of motion on position
     id_pos = EX.register('pos')
@@ -168,9 +169,9 @@ def start_experiment(run_params):
     EX.construct_measurable(id_pos,motions[MODE],[START,START])
 
     # generate target position
-    TARGET = 0
-    #while dist(TARGET, START)==0:
-    #    TARGET = rnd(X_BOUND+1)
+    TARGET=START
+    while dist(TARGET, START)==0:
+        TARGET = rnd(X_BOUND+1)
 
     # set up position sensors
     def xsensor(m):  # along x-axis
@@ -196,7 +197,7 @@ def start_experiment(run_params):
     #- construct target estimate measurable for each observer
     INIT=np.zeros(X_BOUND+1).tolist()
     for typ in ORDERED_TYPES:
-        id_targ[typ]=EX.register('targ_'+typ)
+        id_targ[typ]=EX.register('targ'+typ)
         EX.construct_measurable(id_targ[typ],partial(look_up_target,typ=typ),[INIT],depth=0)    
 
     # distance to target
@@ -211,10 +212,11 @@ def start_experiment(run_params):
     #
 
     #construct the motivational signal for OBS:
+    def rescaling(state,typ):
+        return RESCALING[typ](state[id_dist][0])
     for typ in ORDERED_TYPES:
-        tmpsig=lambda state: RESCALING[typ](state[id_dist][0])
         INIT = RESCALING[typ](dist(START,TARGET))
-        EX.construct_measurable(id_sig[typ],tmpsig,[INIT, INIT])
+        EX.construct_measurable(id_sig[typ],partial(rescaling,typ=typ),[INIT, INIT])
     
     #record the value at each position, for each type:
     VALUES={typ:[RESCALING[typ](dist(pos,TARGET)) for pos in xrange(X_BOUND+1)] for typ in ORDERED_TYPES}
