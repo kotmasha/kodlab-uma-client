@@ -1,16 +1,16 @@
 # The yml file for sniffy, name, script and fun are must have
 
-script: interval
+script: interval_bad
 func: start_experiment
 Nruns: 1
 
 params:
-  mode: teleport
-  env_length: 10
+  mode: simple
+  env_length: 20
   total_cycles: 100
   ex_dataQ: True
   agent_dataQ: True
-  name: interval_single
+  name: interval_bad
   mids_to_record:
     - counter
     - pos
