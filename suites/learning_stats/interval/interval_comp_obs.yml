@@ -1,22 +1,22 @@
 # The yml file for sniffy, name, script and fun are must have
 
-script: interval
+script: interval_comp_obs
 func: start_experiment
 Nruns: 1
 
 params:
-  SnapType: qualitative
-  AutoTarg: True
-  Variation: value-based
-  Mode: walk
-  env_length: 15
-  total_cycles: 30
+  mode: lazy
+  env_length: 20
+  total_cycles: 200
   ex_dataQ: True
   agent_dataQ: True
-  name: interval_single
+  name: comp_obs
   mids_to_record:
     - counter
     - pos
     - dist
-    - sig
-    - targ_foot
+    - targ_Q
+    - targ_Eu
+    - targ_Ev
+    - targ_Du
+    - targ_Dv
