@@ -51,8 +51,6 @@ def start_experiment(run_params):
             Threshold=1./pow(X_BOUND,2)
 
     # Environment description
-    def in_bounds(pos):
-        return (pos >= 0 and pos < X_BOUND)
     def dist(p, q):
         return min(abs(p - q),X_BOUND-abs(p-q)) #distance between two points in environment
 
@@ -102,6 +100,7 @@ def start_experiment(run_params):
     def action_OBS(state):
         return False
     OBS = EX.construct_agent(id_obs,id_sig,action_OBS,MOTION_PARAMS)
+    OBSCD = UMAClientData(EX._EXPERIMENT_ID,id_obs,'minus',EX._service)
     
     #
     ### "mapping" system
@@ -140,18 +139,6 @@ def start_experiment(run_params):
     while dist(TARGET, START)==0:
         TARGET = rnd(X_BOUND)
 
-    #Construct upper/lower bound estimates on target position
-    #- upper bound:
-    id_targ_top=EX.register('ttop')
-    def target_top(state):
-        return TARGET
-    EX.construct_measurable(id_targ_top,target_top,[(TARGET,TARGET)],depth=0)    
-    #- lower bound:
-    id_targ_bot=EX.register('tbot')
-    def target_bot(state):
-        return TARGET
-    EX.construct_measurable(id_targ_bot,target_bot,[(TARGET,TARGET)],depth=0)    
-
     # set up position sensors
     def xsensor(m,width):  # along x-axis
         return lambda state: dist(state[id_pos][0],m)<=width
@@ -169,6 +156,16 @@ def start_experiment(run_params):
         tmp_footprint=[(1 if dist(pos,ind)<=BEACON_WIDTH else 0) for pos in xrange(X_BOUND)]
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
+
+    #Construct footprint-type estimate of target position
+    id_targ_footprint=EX.register('targ_foot')
+    def target_footprint(state):
+        targ=OBSCD.getTarget()
+        prints=np.array([fp for index,fp in zip(targ,FOOTPRINTS) if index])
+        return np.prod(prints,axis=0).tolist()
+    INIT=np.zeros(X_BOUND,dtype=int).tolist()
+    EX.construct_measurable(id_targ_footprint,target_footprint,[INIT,INIT])    
+
 
     # Distance to target
     # - $id_distM$ has already been registerd

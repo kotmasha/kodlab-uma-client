@@ -34,7 +34,11 @@ def start_experiment(run_params):
     try:
         Discount=float(run_params['discount'])
     except KeyError:
-        Discount=0.875
+        Discount=0.75
+    try:
+        Threshold=float(run_params['threshold'])
+    except KeyError:
+        Threshold=.05
     AutoTarg=bool(run_params['AutoTarg'])
     # Decision cycles:
     TOTAL_CYCLES = int(run_params['total_cycles'])
@@ -284,14 +288,12 @@ def start_experiment(run_params):
     def arena_update(state):
         command=(bool(state[id_fd][0]),bool(state[id_bk][0]),bool(state[id_lt][0]),bool(state[id_rt][0]),bool(state[id_arb_top][0]))
         #update operations on arena
-        if state[id_count][0]<BURN_IN_CYCLES:
+        if state[id_count][0]<=BURN_IN_CYCLES:
             training_arena.update_objs(command)
             return training_arena
         else:
-            training_arena.update_objs(command)
-            return training_arena
-            #arena.update_objs(command)
-            #return arena
+            arena.update_objs(command)
+            return arena
     EX.construct_measurable(id_arena, arena_update,[training_arena],depth=0)
 
     ###MOUSE ACCESS
@@ -443,7 +445,7 @@ def start_experiment(run_params):
             agent.delay(delay_sigs, token)
             #print UMACD[(agent._ID,token)].getCurrent()
 
-    while EX.this_state(id_count)< BURN_IN_CYCLES:
+    while EX.this_state(id_count)<=BURN_IN_CYCLES:
         instruction = [
             (id_lt if rnd(2) else cid_lt),
             (id_rt if rnd(2) else cid_rt),
@@ -452,7 +454,7 @@ def start_experiment(run_params):
         EX.update_state(instruction)
         #recorder.record()
 
-    while EX.this_state(id_count)< TOTAL_CYCLES:
+    while EX.this_state(id_count)<=TOTAL_CYCLES:
         EX.update_state()
         recorder.record()
 

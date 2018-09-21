@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.random import randint as rnd
 from collections import deque
+from functools import partial
 #import curses
 import time
 from UMA.som2_noEP import *
@@ -32,20 +33,22 @@ def start_experiment(run_params):
     # Parameters and definitions
     MODE=run_params['mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
     X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
+    BEACON_WIDTH = run_params['beacon_width'] # [max] width of beacon sensor
+
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
-        Discount=0.875
+        Discount=0.75
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND+1,2)
+        Threshold=1./pow(X_BOUND,2)
 
     # Environment description
     def in_bounds(pos):
-        return (pos >= 0 and pos <= X_BOUND)
+        return (pos >= 0 and pos < X_BOUND)
     def dist(p, q):
-        return abs(p - q) #distance between two points in environment
+        return min(abs(p - q),X_BOUND-abs(p-q)) #distance between two points in environment
 
     # agent parameters according to .yml file
 
@@ -103,9 +106,9 @@ def start_experiment(run_params):
     RESCALING={
         '_Q':  lambda r: r,
         '_Eu': lambda r: 1,
-        '_Ev': lambda r: X_BOUND-r,
+        '_Ev': lambda r: (X_BOUND/2)-r,
         '_Du': lambda r: 1,
-        '_Dv': lambda r: pow(1.-Discount,r-X_BOUND),
+        '_Dv': lambda r: pow(1.-Discount,r-(X_BOUND/2)),
         }
 
 
@@ -124,78 +127,62 @@ def start_experiment(run_params):
     ## introduce agent's position
 
     # select starting position
-    START = rnd(X_BOUND+1)
+    START = rnd(X_BOUND)
 
     # effect of motion on position
     id_pos = EX.register('pos')
 
+    def walk_through(state):
+        newpos = (state[id_pos][0] + 1) % X_BOUND
+        return newpos
+
     def random_walk(state):
         diff = 2*rnd(2)-1
-        newpos = state[id_pos][0] + diff
-        if in_bounds(newpos):
-            return newpos
-        else:
-            return state[id_pos][0]
+        newpos = (state[id_pos][0] + diff) % X_BOUND
+        return newpos
 
     def lazy_random_walk(state):
         diff = rnd(3)-1
-        newpos = state[id_pos][0] + diff
-        if in_bounds(newpos):
-            return newpos
-        else:
-            return state[id_pos][0]
+        newpos = (state[id_pos][0] + diff) % X_BOUND
+        return newpos
 
     def teleport(state):
-        return rnd(X_BOUND+1)
+        return rnd(X_BOUND)
 
-    def back_and_forth(state):
-        last_diff=state[id_pos][0]-state[id_pos][1]
-        thispos=state[id_pos][0]
-        if last_diff!=0:
-            newpos=thispos+last_diff
-            if in_bounds(newpos):
-                return newpos
-            else:
-                return thispos-last_diff
-        else:
-            if thispos<X_BOUND:
-                return thispos+1
-            else:
-                return thispos-1
-
-    motions={'simple':back_and_forth,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
+    motions={'simple':walk_through,'walk':random_walk,'lazy':lazy_random_walk,'teleport':teleport}
     EX.construct_measurable(id_pos,motions[MODE],[START,START])
 
     # generate target position
     TARGET=START
     while dist(TARGET, START)==0:
-        TARGET = rnd(X_BOUND+1)
+        TARGET = rnd(X_BOUND)
 
     # set up position sensors
-    def xsensor(footprint):  # along x-axis
-        return lambda state: bool(footprint[state[id_pos][0]])
-    def make_footprint():
-        return [rnd(2) for ind in xrange(X_BOUND+1)]
+    def xsensor(m,width):  # along x-axis
+        return lambda state: dist(state[id_pos][0],m)<=width
 
-    #generate randomized position sensors and record their semantics
+    # Construct initial sensors and record their semantics
     FOOTPRINTS=[]
     all_comp=lambda x: [1-t for t in x]
     for ind in xrange(X_BOUND):
+        # create new beacon sensor centered at $ind$
         tmp_name = 'x' + str(ind)
-        tmp_footprint=make_footprint()
+        id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
+        EX.construct_sensor(id_tmp, xsensor(ind,BEACON_WIDTH))  # constructs the measurables associated with the sensor
+        for typ in ORDERED_TYPES:
+            OBSERVERS[typ].add_sensor(id_tmp)
+        # record the sensor footprint
+        tmp_footprint=[(1 if dist(pos,ind)<=BEACON_WIDTH else 0) for pos in xrange(X_BOUND)]
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
-        id_tmp, id_tmpc = EX.register_sensor(tmp_name)
-        EX.construct_sensor(id_tmp,xsensor(tmp_footprint))
-        OBS.add_sensor(id_tmp)
 
-#Construct footprint-type estimate of target position
+    #Construct footprint-type estimate of target position
     id_targ={}
     def look_up_target(state,typ):
         return OBSACCESS[typ].getTarget()
     
     #- construct target estimate measurable for each observer
-    INIT=np.zeros(X_BOUND+1).tolist()
+    INIT=np.zeros(X_BOUND).tolist()
     for typ in ORDERED_TYPES:
         id_targ[typ]=EX.register('targ'+typ)
         EX.construct_measurable(id_targ[typ],partial(look_up_target,typ=typ),[INIT],depth=0)    
@@ -219,7 +206,7 @@ def start_experiment(run_params):
         EX.construct_measurable(id_sig[typ],partial(rescaling,typ=typ),[INIT, INIT])
     
     #record the value at each position, for each type:
-    VALUES={typ:[RESCALING[typ](dist(pos,TARGET)) for pos in xrange(X_BOUND+1)] for typ in ORDERED_TYPES}
+    VALUES={typ:[RESCALING[typ](dist(pos,TARGET)) for pos in xrange(X_BOUND)] for typ in ORDERED_TYPES}
 
     # -------------------------------------init--------------------------------------------
 
@@ -257,3 +244,6 @@ def start_experiment(run_params):
     # Wrap up and collect garbage
     recorder.close()
     EX.remove_experiment()
+
+
+

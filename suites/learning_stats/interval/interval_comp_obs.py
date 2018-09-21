@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.random import randint as rnd
 from collections import deque
+from functools import partial
 #import curses
 import time
 from UMA.som2_noEP import *
@@ -32,6 +33,7 @@ def start_experiment(run_params):
     # Parameters and definitions
     MODE=run_params['mode'] #mode by which Sniffy moves around: 'teleport'/'walk'/'lazy'
     X_BOUND = run_params['env_length']  # no. of edges in discrete interval = no. of GPS sensors
+
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
@@ -172,24 +174,22 @@ def start_experiment(run_params):
         TARGET = rnd(X_BOUND+1)
 
     # set up position sensors
-    def xsensor(footprint):  # along x-axis
-        return lambda state: bool(footprint[state[id_pos][0]])
-    def make_footprint():
-        return [rnd(2) for ind in xrange(X_BOUND+1)]
-
-    #generate randomized position sensors and record their semantics
+    def xsensor(m):  # along x-axis
+        return lambda state: state[id_pos][0] < m + 1
+    #Construct initial sensors and record their semantics
     FOOTPRINTS=[]
     all_comp=lambda x: [1-t for t in x]
     for ind in xrange(X_BOUND):
         tmp_name = 'x' + str(ind)
-        tmp_footprint=make_footprint()
+        tmp_footprint=[(1 if pos<ind+1 else 0) for pos in xrange(X_BOUND+1)]
+        id_tmp, id_tmpc = EX.register_sensor(tmp_name)  # registers the sensor pairs
+        EX.construct_sensor(id_tmp, xsensor(ind))  # constructs the measurables associated with the sensor
+        for typ in ORDERED_TYPES:
+            OBSERVERS[typ].add_sensor(id_tmp)
         FOOTPRINTS.append(tmp_footprint)
         FOOTPRINTS.append(all_comp(tmp_footprint))
-        id_tmp, id_tmpc = EX.register_sensor(tmp_name)
-        EX.construct_sensor(id_tmp,xsensor(tmp_footprint))
-        OBS.add_sensor(id_tmp)
 
-#Construct footprint-type estimate of target position
+    #Construct footprint-type estimate of target position
     id_targ={}
     def look_up_target(state,typ):
         return OBSACCESS[typ].getTarget()
@@ -257,3 +257,6 @@ def start_experiment(run_params):
     # Wrap up and collect garbage
     recorder.close()
     EX.remove_experiment()
+
+
+

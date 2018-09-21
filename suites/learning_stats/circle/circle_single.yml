@@ -2,19 +2,19 @@
 
 script: circle
 func: start_experiment
-Nruns: 4
+Nruns: 1
 
 params:
   SnapType: qualitative
   AutoTarg: True
   Variation: value-based
   Mode: walk
-  env_length: 20
+  env_length: 15
   beacon_width: 2
-  total_cycles: 200
+  total_cycles: 30
   ex_dataQ: True
   agent_dataQ: True
-  name: circle_Qw
+  name: circle_single
   mids_to_record:
     - counter
     - pos
