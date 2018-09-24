@@ -106,7 +106,7 @@ def start_experiment(run_params):
     RESCALING={
         '_Q':  lambda r: r,
         '_Eu': lambda r: 1,
-        '_Ev': lambda r: (X_BOUND/2)-r,
+        '_Ev': lambda r: pow((X_BOUND/2)-r,1),
         '_Du': lambda r: 1,
         '_Dv': lambda r: pow(1.-Discount,r-(X_BOUND/2)),
         }

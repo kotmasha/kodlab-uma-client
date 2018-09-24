@@ -220,7 +220,7 @@ AGENT_TYPES={
     '_Dv':['discounted value-based','xkcd:purple'],
     }
 #ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
-ORDERED_TYPES=['_Q','_Ev','_Dv']
+ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
 NTYPES=len(ORDERED_TYPES)
 
 # length of the environment (due to differences between circle and interval)
@@ -265,6 +265,7 @@ def imp_check(x,y,typ):
 #- construct the ground truth PCR matrices
 GROUND_WEIGHTS={}
 GROUND_RAW_IMPS={}
+ABS_GROUND_RAW_IMPS={}
 for typ in ORDERED_TYPES:
     lookup=lambda x,y: lookup_val(x,y,typ)
     check=lambda x,y: imp_check(x,y,typ)
@@ -272,6 +273,7 @@ for typ in ORDERED_TYPES:
     GROUND_WEIGHTS[typ]=np.matrix([[lookup(FP[xind],FP[yind]) for xind in xrange(Nsensors)] for yind in xrange(Nsensors)])
     # PCR matrix computed from known values of states; note the transpose!!
     GROUND_RAW_IMPS[typ]=np.matrix([[check(FP[yind],FP[xind]) for xind in xrange(Nsensors)] for yind in xrange(Nsensors)],dtype=int)
+ABS_GROUND_RAW_IMPS=np.matrix([[std_imp_check(FP[yind],FP[xind]) for xind in xrange(Nsensors)] for yind in xrange(Nsensors)])
 
 #- construct matrices from data
 WEIGHTS={typ:[] for typ in ORDERED_TYPES}
@@ -279,6 +281,7 @@ RAW_IMPS={typ:[] for typ in ORDERED_TYPES}
 FULL_IMPS={typ:[] for typ in ORDERED_TYPES}
 RAW_DIFFS={typ:[] for typ in ORDERED_TYPES}
 FULL_DIFFS={typ:[] for typ in ORDERED_TYPES}
+STD_DIFFS={typ:[] for typ in ORDERED_TYPES}
 for typ in ORDERED_TYPES:
     for t in xrange(DURATION):
         #- learned weight matrix at time t:
@@ -299,6 +302,7 @@ for typ in ORDERED_TYPES:
         RAW_DIFFS[typ].append(ellone(tmp_raw_imps,GROUND_RAW_IMPS[typ]))
         #- ell-1 distance of transitive closure to ground truth PCR (could be quite bigger)
         FULL_DIFFS[typ].append(ellone(tmp_full_imps,GROUND_RAW_IMPS[typ]))
+        STD_DIFFS[typ].append(ellone(tmp_full_imps,ABS_GROUND_RAW_IMPS))
 
 #Form state representation
 #
@@ -342,8 +346,11 @@ t=np.array(DATA['counter'])
 for typ in ORDERED_TYPES:
     diff_raw=np.array(RAW_DIFFS[typ])
     diff_full=np.array(FULL_DIFFS[typ])
-    ax_imps.plot(t,diff_raw,linestyle='solid',linewidth=2,color=AGENT_TYPES[typ][1],alpha=1,label='Raw imps, '+AGENT_TYPES[typ][0])
-    ax_imps.plot(t,diff_full,linestyle='dashed',linewidth=2,color=AGENT_TYPES[typ][1],alpha=1,label='Full imps, '+AGENT_TYPES[typ][0])
+    diff_std=np.array(STD_DIFFS[typ])
+    ALPH=0.7
+    ax_imps.plot(t,diff_raw,linestyle='solid',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    ax_imps.plot(t,diff_full,linestyle='dashed',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    ax_imps.plot(t,diff_std,linestyle='dotted',linewidth=2,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Set implications, '+AGENT_TYPES[typ][0])
 ax_imps.legend()
 
 #- form the trajectories plots
