@@ -41,7 +41,7 @@ def start_experiment(run_params):
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
-        Discount=0.875
+        Discount=0.75
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
