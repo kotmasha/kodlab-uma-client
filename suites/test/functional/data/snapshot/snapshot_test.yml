@@ -85,10 +85,6 @@ get snapshot info before:
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
-    q: 0.9
-    threshold: 0.125
-    auto_target: False
-    propagate_mask: False
     initial_size: 0
 
 create sensor1:

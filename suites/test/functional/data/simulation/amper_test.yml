@@ -144,11 +144,6 @@ get snapshot 5 sensor:
       - ['sensor2', 'c_sensor2']
       - ['sensor3', 'c_sensor3']
       - ['sensorX', 'c_sensorX']
-
-    q: 0.9
-    threshold: 0.125
-    auto_target: False
-    propagate_mask: False
     initial_size: 0
 
 get data size 5 sensor:
@@ -199,10 +194,6 @@ get snapshot 4 sensor:
       - ['sensor1', 'c_sensor1']
       - ['sensor2', 'c_sensor2']
       - ['sensor3', 'c_sensor3']
-    q: 0.9
-    threshold: 0.125
-    auto_target: False
-    propagate_mask: False
     initial_size: 0
 
 get data size 4 sensor:
