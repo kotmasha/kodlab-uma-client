@@ -5,10 +5,10 @@ func: start_experiment
 Nruns: 1
 
 params:
-  mode: lazy
+  mode: walk
   env_length: 20
-  total_cycles: 200
-  ex_dataQ: True
+  total_cycles: 100
+  ex_dataQ: False
   agent_dataQ: True
   name: comp_obs
   mids_to_record:

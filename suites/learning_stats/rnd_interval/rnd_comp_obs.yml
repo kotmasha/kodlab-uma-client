@@ -7,7 +7,7 @@ Nruns: 1
 params:
   mode: lazy
   env_length: 20
-  total_cycles: 200
+  total_cycles: 500
   ex_dataQ: True
   agent_dataQ: True
   name: comp_obs
