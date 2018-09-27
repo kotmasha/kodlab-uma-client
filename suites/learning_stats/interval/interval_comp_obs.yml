@@ -2,12 +2,12 @@
 
 script: interval_comp_obs
 func: start_experiment
-Nruns: 1
+Nruns: 3
 
 params:
   mode: walk
   env_length: 20
-  total_cycles: 100
+  total_cycles: 20
   ex_dataQ: False
   agent_dataQ: True
   name: comp_obs
