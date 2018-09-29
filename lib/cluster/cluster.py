@@ -1,4 +1,5 @@
 from multiprocessing import Pool
+from multiprocessing import Process
 import sys
 import os
 import yaml
@@ -41,19 +42,42 @@ class PoolManager:
     def __init__(self):
         self._dict = YamlManager(os.path.join(UMA_SIM_HOME, 'lib', 'cluster', POOL_YML)).get_dict()
         self._Nprocesses = int(self._dict['Pool']['Nprocesses'])
-        self._p = Pool(processes=self._Nprocesses)
 
     def start(self, func, filename, Nruns, Ninstances, port, host):
         self.filename = filename
         self.instance = Ninstances
+        self.Nruns = Nruns
         self.port = port
         self.host = host
-        self.nruns = Nruns
 
+        n = 0
+        pool = {}
         clk = time.time()
-        self._p.map(func, self.gen_params(filename, Nruns, host, port))
-        self._p.close()
-        self._p.join()
+
+        while n < Nruns:
+            for p in pool.keys():
+                if not pool[p].is_alive():
+                    print "%s is done" % p
+                    del pool[p]
+
+            l = len(pool)
+            while l < self._Nprocesses and n < Nruns:
+                params = self.parameter_generator(n, filename, host, port)
+                #print params
+                kwargs = {'run_params': params}
+                process = Process(target=func, kwargs=kwargs)
+                process.daemon = True # set the process to daemon, in case pool crash, all processes will be cleared
+                pool[params['test_name']] = process
+                process.start()
+                print "start test: %s" % params['test_name']
+                n += 1
+                l += 1
+
+            time.sleep(1)
+
+        for p in pool:
+            pool[p].join()
+            print "%s is done" % p
 
         print "All runs are done!\n"
         print "Elapsed time: " + str(time.time() - clk) + "\n"
@@ -67,10 +91,6 @@ class PoolManager:
         params['port'] = str(int(port) + idx % self.instance)
         params['test_name'] = "%s_%d" % (name, idx)
         return params
-
-    def gen_params(self, filename, Nruns, host, port):
-        for i in range(Nruns):
-            yield self.parameter_generator(i, filename, host, port)
 
     def get_Nprocesses(self):
         return self._Nprocesses
