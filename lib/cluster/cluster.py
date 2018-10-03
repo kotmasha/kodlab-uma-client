@@ -41,7 +41,7 @@ class PoolManager:
     def __init__(self):
         self._dict = YamlManager(os.path.join(UMA_SIM_HOME, 'lib', 'cluster', POOL_YML)).get_dict()
         self._Nprocesses = int(self._dict['Pool']['Nprocesses'])
-        self._p = Pool(processes=self._Nprocesses)
+        self._p = Pool(processes=self._Nprocesses)#,maxtasksperchild=1)
 
     def start(self, func, filename, Nruns, Ninstances, port, host):
         self.filename = filename
@@ -51,7 +51,7 @@ class PoolManager:
         self.nruns = Nruns
 
         clk = time.time()
-        self._p.map(func, self.gen_params(filename, Nruns, host, port))
+        self._p.imap(func, self.gen_params(filename, Nruns, host, port))
         self._p.close()
         self._p.join()
 
