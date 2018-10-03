@@ -220,8 +220,8 @@ AGENT_TYPES={
     '_Du':['discounted uniform','xkcd:forest green'],
     '_Dv':['discounted value-based','xkcd:green'],
     }
-#ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
-ORDERED_TYPES=['_Eu','_Du']
+ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
+#ORDERED_TYPES=['_Eu','_Du']
 #ORDERED_TYPES=['_Q','_Ev','_Dv']
 NTYPES=len(ORDERED_TYPES)
 
@@ -260,7 +260,7 @@ def lookup_val(x,y,ind,typ):
     if typ=='_Q':
         return -1 if not sum(x*y) else np.extract(x*y,vm(ind,typ)).min()
     else:
-        return (0.+sum(x*y*vm(ind,typ)))/env_length(ind,typ)
+        return sum(x*y*vm(ind,typ))
 
 def imp_check(x,y,ind,typ):
     XY=lookup_val(x,y,ind,typ)
@@ -271,7 +271,7 @@ def imp_check(x,y,ind,typ):
     if typ=='_Q': #qualitative implication (zero threshold)
         return qless(qmax(XY,X_Y_),XY_)
     else: #real-valued (statistical) implication
-        return XY_<min(total*threshold(ind),XY,X_Y_,X_Y) or (XY_==0 and X_Y==0)# and XY>0 and X_Y_>0)
+        return XY_<min(total*threshold(ind),XY,X_Y_,X_Y) or (XY_==0 and X_Y==0 and XY>0 and X_Y_>0)
 
 #- construct the ground truth PCR matrices for each run and type
 GROUND_WEIGHTS={typ:[] for typ in ORDERED_TYPES}
@@ -293,7 +293,6 @@ for ind in xrange(NRUNS):
 WEIGHTS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
 RAW_IMPS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
 FULL_IMPS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
-WEIGHT_DIFFS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
 RAW_DIFFS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
 FULL_DIFFS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
 STD_DIFFS={typ:[[] for ind in xrange(NRUNS)] for typ in ORDERED_TYPES}
@@ -301,8 +300,7 @@ for typ in ORDERED_TYPES:
     for ind in xrange(NRUNS):
         for t in xrange(DURATION):
             #- learned weight matrix at time t:
-            tmp_raw_weights=convert_weights(DATA[('obs'+typ,'weights')][ind][t]['minus'])
-            WEIGHTS[typ][ind].append(tmp_raw_weights)
+            WEIGHTS[typ][ind].append(convert_weights(DATA[('obs'+typ,'weights')][ind][t]['minus']))
 
             #- learned PCR structure (learned raw implications) at time t:
             tmp_raw_imps=convert_raw_implications(DATA[('obs'+typ,'raw_implications')][ind][t]['minus'])
@@ -312,8 +310,6 @@ for typ in ORDERED_TYPES:
             tmp_full_imps=convert_full_implications(DATA[('obs'+typ,'full_implications')][ind][t]['minus'])
             FULL_IMPS[typ][ind].append(tmp_full_imps)
 
-            #- ell-1 distance of learned weights to ground truth weights
-            WEIGHT_DIFFS[typ][ind].append((np.abs(tmp_raw_weights-GROUND_WEIGHTS[typ][ind])).max())
             #- ell-1 distance of learned PCR to ground truth PCR
             RAW_DIFFS[typ][ind].append(ellone(tmp_raw_imps,GROUND_RAW_IMPS[typ][ind]))
             #- ell-1 distance of transitive closure to ground truth PCR (could be quite bigger)
@@ -325,35 +321,31 @@ for typ in ORDERED_TYPES:
 #
 
 #- initialize figure
-fig,ax_imps=plt.subplots(nrows=len(ORDERED_TYPES),ncols=1,sharex=True,sharey=True)
+fig,ax_imps=plt.subplots()
 fig.suptitle('# of incorrect implications over time',fontsize=10)
 plt.subplots_adjust(left=0.05,right=0.95,bottom=0.05,top=0.95)
 plt.xlabel('time elapsed (cycles)',fontsize=10)
 
-#- form the implications plots
-AX={}
+#- initialize implications plot
+
+ax_imps.set_ylabel('# incorrect implications',fontsize=10)
+ax_imps.set_ylim(bottom=0,top=pow(NSENSORS,2))
+
+#- form the implications plot
 t=xrange(DURATION)
-for typ,ax in zip(ORDERED_TYPES,ax_imps):
-    AX[typ]=ax
-    ax.set_ylabel('% incorrect implications',fontsize=10)
-    
+for typ in ORDERED_TYPES:
     SKIP=DURATION/100
     OFFSET=1
 
-    weight_diffs=np.array(WEIGHT_DIFFS[typ])
-    raw_diffs=np.array(RAW_DIFFS[typ])/pow(NSENSORS,2)
-    full_diffs=np.array(FULL_DIFFS[typ])/pow(NSENSORS,2)
-    std_diffs=np.array(STD_DIFFS[typ])/pow(NSENSORS,2)
-    #YMAX=max(np.max(raw_diffs),np.max(full_diffs),np.max(std_diffs))
-    ax.set_ylim(bottom=0.,top=1.)
-
+    raw_diffs=np.array(RAW_DIFFS[typ])#[:SKIP:]
+    full_diffs=np.array(FULL_DIFFS[typ])#[OFFSET:SKIP:]
+    std_diffs=np.array(STD_DIFFS[typ])#[2*OFFSET:SKIP:]
+    YMAX=max(np.max(raw_diffs),np.max(full_diffs),np.max(std_diffs))
     #means over runs
-    diff_weight_mean=np.mean(weight_diffs,axis=0)
     diff_raw_mean=np.mean(raw_diffs,axis=0)
     diff_full_mean=np.mean(full_diffs,axis=0)
     diff_std_mean=np.mean(std_diffs,axis=0)
     #standard deviations over runs
-    diff_weight_sdv=np.std(weight_diffs,axis=0)
     diff_raw_sdv=np.std(raw_diffs,axis=0)
     diff_full_sdv=np.std(full_diffs,axis=0)
     diff_std_sdv=np.std(std_diffs,axis=0)
@@ -361,18 +353,20 @@ for typ,ax in zip(ORDERED_TYPES,ax_imps):
     ALPH=0.7 #foreground transparency coefficients
     BETA=0.2 #background transparency coefficients
 
-    ax.fill_between(t,diff_weight_mean-diff_weight_sdv,diff_weight_mean+diff_weight_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
-    ax.fill_between(t,diff_raw_mean-diff_raw_sdv,diff_raw_mean+diff_raw_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
-    #ax.fill_between(t,diff_full_mean-diff_full_sdv,diff_full_mean+diff_full_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
-    #ax.fill_between(t,diff_std_mean-diff_std_sdv,diff_std_mean+diff_std_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
-    
-    ax.plot(t,diff_weight_mean,linestyle='--',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned weights vs. Ground weights, '+AGENT_TYPES[typ][0])
-    ax.plot(t,diff_raw_mean,linestyle='solid',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
-    #ax.plot(t,diff_full_mean,linestyle='dashed',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
-    #ax.plot(t,diff_std_mean,linestyle='dotted',linewidth=2,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Set implications, '+AGENT_TYPES[typ][0])
+    plt.ylim(0,YMAX)
+    plt.errorbar(t,diff_raw_mean,yerr=diff_raw_sdv,errorevery=SKIP,linestyle='-',marker='^',alpha=ALPH,color=AGENT_TYPES[typ][1],label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    plt.errorbar(t,diff_full_mean,yerr=diff_full_sdv,errorevery=SKIP,linestyle='--',marker='.',alpha=ALPH,color=AGENT_TYPES[typ][1],label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    plt.errorbar(t,diff_std_mean,yerr=diff_std_sdv,errorevery=SKIP,linestyle=':',marker='v',alpha=ALPH,color=AGENT_TYPES[typ][1],label='Full implications vs. Set implications, '+AGENT_TYPES[typ][0])
 
-    ax.legend()
-#ax_imps.legend()
+    #plt.fill_between(t,diff_raw_mean-diff_raw_sdv,diff_raw_mean+diff_raw_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
+    #plt.fill_between(t,diff_full_mean-diff_full_sdv,diff_full_mean+diff_full_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
+    #plt.fill_between(t,diff_std_mean-diff_std_sdv,diff_std_mean+diff_std_sdv,alpha=BETA,color=AGENT_TYPES[typ][1])
+    #
+    #ax_imps.plot(t,diff_raw_mean,linestyle='solid',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    #ax_imps.plot(t,diff_full_mean,linestyle='dashed',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
+    #ax_imps.plot(t,diff_std_mean,linestyle='dotted',linewidth=2,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Set implications, '+AGENT_TYPES[typ][0])
+
+ax_imps.legend()
 
 #Show the plots
 plt.show()
