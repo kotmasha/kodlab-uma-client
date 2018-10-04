@@ -37,11 +37,11 @@ def start_experiment(run_params):
     try:
         Discount=float(run_params['discount']) #discount coefficient, if any
     except KeyError:
-        Discount=0.875
+        Discount=0.75
     try:
         Threshold=float(run_params['threshold']) #implication threshold, defaulting to the square of the probability of a single position.
     except KeyError:
-        Threshold=1./pow(X_BOUND+1,2)
+        Threshold=1./pow(X_BOUND+1.,2)
 
     # Environment description
     def in_bounds(pos):
@@ -59,7 +59,7 @@ def start_experiment(run_params):
 
     discounted_observer={
         'type': 'discounted',
-        'discount': Discount,
+        'q': Discount,
         'AutoTarg': True,
         'threshold': Threshold,
     }
@@ -67,7 +67,7 @@ def start_experiment(run_params):
     qualitative_observer={
         'type': 'qualitative',
         'AutoTarg': True,
-        #'threshold': 0,
+        'threshold': 0,
     }
 
     AGENT_PARAMS={
@@ -105,7 +105,7 @@ def start_experiment(run_params):
     RESCALING={
         '_Q':  lambda r: r,
         '_Eu': lambda r: 1,
-        '_Ev': lambda r: pow(X_BOUND-r,1),
+        '_Ev': lambda r: X_BOUND-r,
         '_Du': lambda r: 1,
         '_Dv': lambda r: pow(1.-Discount,r-X_BOUND),
         }

@@ -370,12 +370,13 @@ class Experiment(object):
             # an agent's sensor will ALWAYS have decdep=False to ensure evaluation of the update function in the second sweep
             self.construct_sensor(id_agent, definition=definition, decdep=False, init_value=[False,False])
             # construct new agent (Python and C++)
-            try:
-                #trying to pass along type specification to the UMA core
-                agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent, **params)
-            except KeyError:
-                #if no type specification, use the default
-                agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent)
+            #try:
+            #   #trying to pass along type specification to the UMA core
+            agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent, **params)
+            #except KeyError:
+            #    #if no type specification, use the default
+            #    agent_service = self._EXPERIMENT_SERVICE.add_agent(id_agent)
+            
             new_agent = Agent(self, id_agent, id_motivation, params, agent_service)
             self._AGENTS[id_agent] = new_agent
             return new_agent
