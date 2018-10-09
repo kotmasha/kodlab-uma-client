@@ -27,4 +27,5 @@ params:
     - che_out
     - sig_step
     - sig_turn
+    - mdist
 
