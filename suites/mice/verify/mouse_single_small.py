@@ -324,13 +324,19 @@ def start_experiment(run_params):
     ### MOTIVATIONAL SIGNALS
     #
 
+    #ell_one distance to nearest cheese
+    id_mdist=EX.register('mdist')
+    def getMinCheeseDist(state):
+        return state[id_mouse][0].mdist()
+    INIT=EX.this_state(id_mouse).mdist()
+    EX.construct_measurable(id_mdist,getMinCheeseDist,[INIT,INIT],depth=1)
     # stepping motivational signal (already registered)
     if SnapType=='qualitative':
         # signal is the ellone distance to the closest cheese
-        def getMinCheeseDist(state):
-            return state[id_mouse][0].mdist()
-        INIT=EX.this_state(id_mouse).mdist()
-        EX.construct_measurable(id_sig_step,getMinCheeseDist,[INIT],depth=0)
+        def step_signal(state):
+            return 1+(state[id_mdist][0]-state[id_mdist][1])
+        INIT=0
+        EX.construct_measurable(id_sig_step,step_signal,[INIT,INIT])
     else:
         rescaling_step = lambda x:x
         def getElevation(state):

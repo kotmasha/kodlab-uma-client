@@ -417,59 +417,7 @@ class Experiment(object):
                     activity = 'plus' if agent._ACTIVE else 'minus'
                     self._UPDATE_CYCLE_REPORTS[mid]['activity']=activity #report active snapshot
 
-                    ## ENRICHMENT
-                    # agent analyzes outcomes of preceding decision
-                    # cycle; if the prediction was too broad, add a
-                    # sensor corresponding to the episode last observed
-                    # and acknowledged by the active snapshot of the agent:
                     self._UPDATE_CYCLE_REPORTS[mid]['pred_too_general']=agent.report_current().subtract(agent.report_predicted()).weight()
-                    #if agent.report_current().subtract(agent.report_predicted()).weight() > 0:
-                    #    new_episode = agent.report_last().intersect(agent.report_initmask())
-                    #    sensors_to_be_added = [new_episode]
-                    #else:
-                    #    sensors_to_be_added = []
-                    #
-                    #sensors_not_to_be_removed = agent.ALL_FALSE()
-
-                    ## PRUNING
-                    # abduction over negligible sensors
-                    # STEP 1. gather the negligible delayed sensors;
-                    #         ($x$ is negligible if $x<x^*$)
-                    # STEP 2. cluster them;
-                    # STEP 3. perform abduction over the clusters.
-
-                    # abduction over delayed sensors implying an initial sensor
-                    # STEP 1. Gather them
-                    #
-                    #init_downs = agent.close_downwards([agent.generate_signal([sid]) for sid in agent.report_initial()])
-                    #delayed_downs = [sig.subtract(agent.report_initmask()) for sig in init_downs]
-                    # STEP 2. Perform abduction
-                    #new_masks = agent.perform_abduction(delayed_downs)
-
-                    # Restructuring
-                    # STEP 1. Add new delayed sensors:
-                    #sensors_to_be_added.extend(new_masks)
-                    #ENRICHMENT DONE HERE
-                    #agent.delay(sensors_to_be_added)
-                    
-                    # Step 2. Remove old sensors:
-                    #sensors_to_be_removed = agent.ALL_FALSE()
-                    #for sig in delayed_downs:
-                    #    sensors_to_be_removed.add(sig)
-                    #agent.pad_signal(sensors_to_be_removed)
-                    #agent.prune(sensors_to_be_removed)
-
-                    # RANDOM THOUGHTS:
-                    # There needs to be a budget of delayed units, and we should merely
-                    # be rewiring them....
-                    # Increases in the budget should be prompted by a need for more units, that is:
-                    # add more units only when "pruning" ends up demanding more resources than available.
-                    #
-                    ##THIS IS WHERE IT WOULD BE NICE TO HAVE AN ALTERNATIVE ARCHITECTURE
-                    ##LEARNING THE SAME STRUCTURE OR AN APPROXIMATION THEREOF
-                    
-                    ## compute and record e&p duration:
-                    self._UPDATE_CYCLE_REPORTS[mid]['exiting_enrichment_and_pruning']=time.clock()
 
                     ## agent enters observation-deliberation-decision stage and reports:
                     self._UPDATE_CYCLE_REPORTS[mid]['deliberateQ'] = agent.decide()
@@ -479,17 +427,17 @@ class Experiment(object):
                     self._UPDATE_CYCLE_REPORTS[mid]['exiting_decision_cycle']=time.clock()
                     
                     ## report internal logical state:
-                    self._UPDATE_CYCLE_REPORTS[mid]['weights']={}
-                    self._UPDATE_CYCLE_REPORTS[mid]['raw_implications']={}
-                    self._UPDATE_CYCLE_REPORTS[mid]['full_implications']={}
-                    self._UPDATE_CYCLE_REPORTS[mid]['delay_masks']={}
-                    for token in ['plus','minus']:
-                        umacd=UMAClientData(self._EXPERIMENT_ID,mid,token,self._service)
-                        self._UPDATE_CYCLE_REPORTS[mid]['weights'][token]=umacd.get_weights()
-                        self._UPDATE_CYCLE_REPORTS[mid]['raw_implications'][token]=umacd.get_dirs()
-                        self._UPDATE_CYCLE_REPORTS[mid]['full_implications'][token]=umacd.get_npdirs()
-                        self._UPDATE_CYCLE_REPORTS[mid]['delay_masks'][token]=umacd.get_mask_amper()
-                                            
+                    #self._UPDATE_CYCLE_REPORTS[mid]['weights']={}
+                    #self._UPDATE_CYCLE_REPORTS[mid]['raw_implications']={}
+                    #self._UPDATE_CYCLE_REPORTS[mid]['full_implications']={}
+                    #self._UPDATE_CYCLE_REPORTS[mid]['delay_masks']={}
+                    #for token in ['plus','minus']:
+                    #    umacd=UMAClientData(self._EXPERIMENT_ID,mid,token,self._service)
+                    #    self._UPDATE_CYCLE_REPORTS[mid]['weights'][token]=umacd.get_weights()
+                    #    self._UPDATE_CYCLE_REPORTS[mid]['raw_implications'][token]=umacd.get_dirs()
+                    #    self._UPDATE_CYCLE_REPORTS[mid]['full_implications'][token]=umacd.get_npdirs()
+                    #    self._UPDATE_CYCLE_REPORTS[mid]['delay_masks'][token]=umacd.get_mask_amper()
+                                          
                     ## report the agent size:
                     self._UPDATE_CYCLE_REPORTS[mid]['size']=max(agent._SNAPSHOTS['plus']._SIZE,agent._SNAPSHOTS['minus']._SIZE)
                     
@@ -508,10 +456,11 @@ class Experiment(object):
                     # if midc is an agent, a decision has already been reached, so no action is required
                     pass
             else:  # neither mid nor midc is an agent, so perform the value update
-                try:  # attempt update using definition
-                    self.set_state(mid, self._DEFS[mid](self._STATE))
-                except:  # if no definition available, do nothing; this is a state variable evolving independently of the agent's actions, e.g., a pointer to a data structure.
-                    pass
+                self.set_state(mid, self._DEFS[mid](self._STATE))
+                #try:  # attempt update using definition
+                #    self.set_state(mid, self._DEFS[mid](self._STATE))
+                #except:  # if no definition available, do nothing; this is a state variable evolving independently of the agent's actions, e.g., a pointer to a data structure.
+                #    pass
 
         # At this point, there is a complete decision vector
         # Second update sweep goes over all mids whose dep status is False.
