@@ -272,6 +272,10 @@ class UMAClientData:
         return self._service.get('/UMA/data/propagateMasks', {'experiment_id': self._experiment_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['propagate_masks']
 
+    def get_all(self):
+        return self._service.get('/UMA/data/all', {'experiment_id': self._experiment_id,
+                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']
+
     def get_mask_amper(self):
         return self._service.get('/UMA/data/maskAmper', {'experiment_id': self._experiment_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['mask_amper']
