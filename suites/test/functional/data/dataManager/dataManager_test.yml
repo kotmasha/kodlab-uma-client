@@ -140,27 +140,27 @@ get current:
   kwargs:
     current: [True, False, False, True, True, False, False, False, False, True]
 
-set current:
+set target:
   method: PUT
-  url: /UMA/data/current
+  url: /UMA/data/target
   status_code: 200
   query:
     experiment_id: test_experiment
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
-    current: [True, False, False, True, True, False, False, False, False, True]
+    target: [True, False, False, True, True, False, False, False, False, True]
 
-get current:
+get target:
   method: GET
-  url: /UMA/data/current
+  url: /UMA/data/target
   status_code: 200
   query:
     experiment_id: test_experiment
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
-    current: [True, False, False, True, True, False, False, False, False, True]
+    target: [True, False, False, True, True, False, False, False, False, True]
 
 npdirs:
   method: POST
@@ -262,6 +262,62 @@ get thresholds:
       - [0.125, 0.125, 0.125, 0.125]
       - [0.125, 0.125, 0.125, 0.125, 0.125]
 
+get all:
+  method: GET
+  url: /UMA/data/all
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  kwargs:
+    weights:
+      - [0.25]
+      - [0.25, 0.25]
+      - [0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+      - [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+
+    dirs:
+      - [True]
+      - [False, True]
+      - [False, False, True]
+      - [False, True, False, True]
+      - [False, False, False, False, True]
+      - [False, False, False, True, False, True]
+      - [False, False, False, False, False, False, True]
+      - [False, True, False, False, False, False, False, True]
+      - [False, False, False, False, True, False, True, False, True]
+      - [False, False, False, True, False, False, False, False, False, True]
+
+    thresholds:
+      - [0.125]
+      - [0.125, 0.125]
+      - [0.125, 0.125, 0.125]
+      - [0.125, 0.125, 0.125, 0.125]
+      - [0.125, 0.125, 0.125, 0.125, 0.125]
+
+    npdirs:
+    - [True, False]
+    - [False, True]
+    - [False, False, True, False]
+    - [False, True, False, True]
+    - [False, False, False, False, True, False]
+    - [False, True, False, True, False, True]
+    - [False, False, False, False, False, False, True, False]
+    - [False, True, False, True, False, False, False, True]
+    - [False, False, False, False, True, False, True, False, True, False]
+    - [False, True, False, True, False, False, False, False, False, True]
+
+    current: [True, False, False, True, True, False, False, False, False, True]
+
+    target: [True, False, False, True, True, False, False, False, False, True]
+
 get data size:
   method: GET
   url: /UMA/data/dataSize
@@ -340,11 +396,16 @@ tests:
   - create sensor4
   - set observe
   - get observe
+  - set current
+  - get current
+  - set target
+  - get target
   - npdirs
   - get npdirs
   - get weights
   - get dirs
   - get thresholds
+  - get all
   - get data size
   - delay 0&2&5
   - get mask amper
