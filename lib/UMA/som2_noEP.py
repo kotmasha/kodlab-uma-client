@@ -417,7 +417,7 @@ class Experiment(object):
                     activity = 'plus' if agent._ACTIVE else 'minus'
                     self._UPDATE_CYCLE_REPORTS[mid]['activity']=activity #report active snapshot
 
-                    self._UPDATE_CYCLE_REPORTS[mid]['pred_too_general']=agent.report_current().subtract(agent.report_predicted()).weight()
+                    #self._UPDATE_CYCLE_REPORTS[mid]['pred_too_general']=agent.report_current().subtract(agent.report_predicted()).weight()
 
                     ## agent enters observation-deliberation-decision stage and reports:
                     self._UPDATE_CYCLE_REPORTS[mid]['deliberateQ'] = agent.decide()
@@ -457,6 +457,7 @@ class Experiment(object):
                     pass
             else:  # neither mid nor midc is an agent, so perform the value update
                 self.set_state(mid, self._DEFS[mid](self._STATE))
+                #there was a try clause here:
                 #try:  # attempt update using definition
                 #    self.set_state(mid, self._DEFS[mid](self._STATE))
                 #except:  # if no definition available, do nothing; this is a state variable evolving independently of the agent's actions, e.g., a pointer to a data structure.
@@ -495,10 +496,10 @@ class Snapshot(object):
         self._SENSORS = []
         self._SIZE = 0
         self._OBSERVE = Signal(np.array([], dtype=np.bool))
-        self._LAST = Signal(np.array([], dtype=np.bool))
-        self._CURRENT = Signal(np.array([], dtype=np.bool))
-        self._PREDICTED = Signal(np.array([], dtype=np.bool))
-        self._TARGET = Signal(np.array([], dtype=np.bool))
+        #self._LAST = Signal(np.array([], dtype=np.bool))
+        #self._CURRENT = Signal(np.array([], dtype=np.bool))
+        #self._PREDICTED = Signal(np.array([], dtype=np.bool))
+        #self._TARGET = Signal(np.array([], dtype=np.bool))
         self._INITMASK = Signal(np.array([], dtype=np.bool))
         self._SNAPSHOT_SERVICE = snapshot_service
 
@@ -508,11 +509,11 @@ class Snapshot(object):
             self._SIZE += 2
             self._SENSORS.extend([mid, midc])
             self._OBSERVE.extend(np.array([experiment.this_state(mid), experiment.this_state(midc)], dtype=bool))
-            self._CURRENT.extend(np.array([False, False], dtype=bool))
-            self._TARGET.extend(np.array([False, False], dtype=bool))
-            self._PREDICTED.extend(np.array([False, False], dtype=bool))
-            self._LAST.extend(np.array([False, False], dtype=bool))
+            #self._LAST.extend(np.array([False, False], dtype=bool))
             self._INITMASK.extend(np.array([True, True], dtype=bool))
+            #self._CURRENT.extend(np.array([False, False], dtype=bool))
+            #self._TARGET.extend(np.array([False, False], dtype=bool))
+            #self._PREDICTED.extend(np.array([False, False], dtype=bool))
 
     def collect_observation(self):
         self._OBSERVE = Signal([self._AGENT._EXPERIMENT.this_state(mid) for mid in self._SENSORS])
@@ -755,8 +756,8 @@ class Agent(object):
         self.collect_observation()
 
         # move the latest record of the current state to "last state"
-        for token in ['plus', 'minus']:
-            self._SNAPSHOTS[token]._LAST = self.report_current(token)
+        #for token in ['plus', 'minus']:
+        #    self._SNAPSHOTS[token]._LAST = self.report_current(token)
 
         res = UMAClientSimulation(self._AGENT_SERVICE.get_experiment_id(), self._AGENT_SERVICE.get_service()).make_decision(
             self._AGENT_SERVICE.get_agent_id(),
@@ -767,12 +768,13 @@ class Agent(object):
         )
         for token in ['plus', 'minus']:
             dist[token] = res[token]['res']
-            self._SNAPSHOTS[token]._TARGET = Signal(res[token]['target'])
-            self._SNAPSHOTS[token]._CURRENT = Signal(res[token]['current'])
-            self._SNAPSHOTS[token]._PREDICTED = Signal(res[token]['prediction'])
+        #    self._SNAPSHOTS[token]._TARGET = Signal(res[token]['target'])
+        #    self._SNAPSHOTS[token]._CURRENT = Signal(res[token]['current'])
+        #    self._SNAPSHOTS[token]._PREDICTED = Signal(res[token]['prediction'])
+
 
         # make a decision
-        token, qualityQ = rlessthan((dist['plus'], 'plus'), (dist['minus'], 'minus'))
+        token, deliberateQ = rlessthan((dist['plus'], 'plus'), (dist['minus'], 'minus'))
 
         # Update the decision vector:
         # - only the decision vector gets updated -- not the activity
@@ -781,8 +783,7 @@ class Agent(object):
         self._EXPERIMENT.this_state('decision').append(self._ID if token == 'plus' else self._CID)
 
         # return comment
-        #return 'deliberate' if qualityQ else 'random'
-        return qualityQ
+        return deliberateQ
 
     ## PICK OUT SENSORS CORRESPONDING TO A SIGNAL
     #  - returns a list of mids corresponding to the signal

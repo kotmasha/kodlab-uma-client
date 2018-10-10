@@ -270,11 +270,20 @@ def start_experiment(run_params):
     # sensor footprints for this run
     fp=lambda sensor_ind: np.array(FOOTPRINTS[sensor_ind])
 
+    #get internal data for each agent
+    id_internal={}
+    def get_internal(state,typ):
+        return OBSACCESS[typ].get_all()
+    INIT={}
+    for typ in ORDERED_TYPES:
+        id_internal[typ]=EX.register('internal'+typ)
+        EX.construct_measurable(id_internal[typ],partial(get_internal,typ=typ),[INIT],depth=0)
+
     #Construct footprint-type estimate of target position
     id_targ={}
     def look_up_target(state,typ):
         target_fp=np.ones(ENV_LENGTH)
-        for ind,val in enumerate(OBSACCESS[typ].getTarget()):
+        for ind,val in enumerate(state[id_internal[typ]][0]['target']):
             target_fp=target_fp*fp(ind) if val else target_fp
         return target_fp.tolist()
     #- construct target estimate measurable for each observer
@@ -353,7 +362,8 @@ def start_experiment(run_params):
     #- import weight matrices from core
     id_weights={typ:EX.register('wgt'+typ) for typ in ORDERED_TYPES}
     def weights(state,typ):
-        return convert_weights(OBSACCESS[typ].get_weights())
+        return convert_weights(state[id_internal[typ]][0]['weights'])
+        #return convert_weights(OBSACCESS[typ].get_weights())
     for typ in ORDERED_TYPES:    
         INIT = -np.ones((2*NSENSORS,2*NSENSORS)) if typ=='_Q' else np.zeros((2*NSENSORS,2*NSENSORS))
         EX.construct_measurable(id_weights[typ],partial(weights,typ=typ),[INIT],depth=0)
@@ -361,7 +371,8 @@ def start_experiment(run_params):
     #- import raw implications from core
     id_raw_imps={typ:EX.register('raw'+typ) for typ in ORDERED_TYPES}
     def raw_imps(state,typ):
-        return convert_raw_implications(OBSACCESS[typ].get_dirs())
+        return convert_raw_implications(state[id_internal[typ]][0]['dirs'])
+        #return convert_raw_implications(OBSACCESS[typ].get_dirs())
     INIT=np.identity(2*NSENSORS)
     for typ in ORDERED_TYPES:
         EX.construct_measurable(id_raw_imps[typ],partial(raw_imps,typ=typ),[INIT],depth=0)
@@ -369,7 +380,8 @@ def start_experiment(run_params):
     #- import full implications from core
     id_full_imps={typ:EX.register('full'+typ) for typ in ORDERED_TYPES}
     def full_imps(state,typ):
-        return convert_full_implications(OBSACCESS[typ].get_npdirs())
+        return convert_full_implications(state[id_internal[typ]][0]['npdirs'])
+        #return convert_full_implications(OBSACCESS[typ].get_npdirs())
     INIT=np.identity(2*NSENSORS)
     for typ in ORDERED_TYPES:
         EX.construct_measurable(id_full_imps[typ],partial(full_imps,typ=typ),[INIT],depth=0)
