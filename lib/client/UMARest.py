@@ -120,6 +120,14 @@ class UMAClientExperiment(UMAClientObject):
     def get_experiment_id(self):
         return self._experiment_id
 
+    def get_experiment_info(self):
+        data = {'experiment_id': self._experiment_id}
+        result = self._service.get('/UMA/object/experiment', data)
+        if not result:
+            return None
+        else:
+            return result['data']
+
     def add_agent(self, agent_id, **kwargs):
         data = {'experiment_id': self._experiment_id, 'agent_id': agent_id}
         data.update(kwargs)
@@ -142,6 +150,14 @@ class UMAClientAgent(UMAClientObject):
 
     def get_agent_id(self):
         return self._agent_id
+
+    def get_agent_info(self):
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id}
+        result = self._service.get('/UMA/object/agent', data)
+        if not result:
+            return None
+        else:
+            return result['data']
 
     def add_snapshot(self, snapshot_id):
         data = {'snapshot_id': snapshot_id, 'agent_id': self._agent_id, 'experiment_id': self._experiment_id}
