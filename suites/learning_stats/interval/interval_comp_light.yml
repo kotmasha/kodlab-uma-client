@@ -2,13 +2,13 @@
 
 script: interval_comp_light
 func: start_experiment
-Nruns: 10
+Nruns: 1
 
 params:
-  mode: teleport
+  mode: simple
   discount: .75
-  env_length: 20
-  total_cycles: 500
+  env_length: 10
+  total_cycles: 50
   ex_dataQ: False
   agent_dataQ: False
   name: comp_light
@@ -36,3 +36,5 @@ params:
     - fdiff_Ev
     - fdiff_Du
     - fdiff_Dv
+    - raw_Eu
+    - raw_Ev
