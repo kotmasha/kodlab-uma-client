@@ -149,9 +149,9 @@ AGENT_TYPES={
     '_Du':['discounted uniform','xkcd:forest green'],
     '_Dv':['discounted value-based','xkcd:green'],
     }
-ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
+#ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
 #ORDERED_TYPES=['_Eu','_Du']
-#ORDERED_TYPES=['_Q','_Ev','_Dv']
+ORDERED_TYPES=['_Q','_Ev','_Dv']
 NTYPES=len(ORDERED_TYPES)
 
 # length of the environment (due to differences between circle and interval):
@@ -177,19 +177,20 @@ TARGET_GROUND={typ:np.array([SUPP['ground_targ'][typ] for t in xrange(DURATION)]
 POS=np.array(DATA['pos'])
 
 #- initialize figure
-fig,axes=plt.subplots(nrows=1+NTYPES,ncols=1,sharex=True,sharey=False)
+fig,axes=plt.subplots(nrows=NTYPES,ncols=1,sharex=True,sharey=False)
 fig.suptitle('# of incorrect implications over time',fontsize=10)
 plt.subplots_adjust(left=0.05,right=0.95,bottom=0.05,top=0.95)
 plt.xlabel('time elapsed (cycles)',fontsize=10)
 
 #- initialize implications plot
-ax_imps=axes[0]
-ax_imps.set_ylabel('# incorrect implications',fontsize=10)
-ax_imps.set_ylim(bottom=0,top=Nsensors*Nsensors)
+#ax_imps=axes[0]
+#ax_imps.set_ylabel('# incorrect implications',fontsize=10)
+#ax_imps.set_ylim(bottom=0,top=Nsensors*Nsensors)
 
 #- associate axes to types
 AX={}
-for typ,ax in zip(ORDERED_TYPES,axes[1:]):
+#for typ,ax in zip(ORDERED_TYPES,axes[1:]):
+for typ,ax in zip(ORDERED_TYPES,axes):
     AX[typ]=ax
     AX[typ].set_title('Target state representation over time, '+AGENT_TYPES[typ][0],fontsize=10)
     AX[typ].set_ylabel('position in env',fontsize=10)
@@ -198,13 +199,13 @@ for typ,ax in zip(ORDERED_TYPES,axes[1:]):
 
 #- form the implications plot
 t=np.array(DATA['counter'])
-for typ in ORDERED_TYPES:
-    diff_raw=np.array(RAW_DIFFS[typ])
-    diff_full=np.array(FULL_DIFFS[typ])
-    ALPH=0.7
-    ax_imps.plot(t,diff_raw,linestyle='solid',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
-    ax_imps.plot(t,diff_full,linestyle='dashed',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
-ax_imps.legend()
+#for typ in ORDERED_TYPES:
+#    diff_raw=np.array(RAW_DIFFS[typ])
+#    diff_full=np.array(FULL_DIFFS[typ])
+#    ALPH=0.7
+#    ax_imps.plot(t,diff_raw,linestyle='solid',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Learned PCR vs. Ground PCR, '+AGENT_TYPES[typ][0])
+#    ax_imps.plot(t,diff_full,linestyle='dashed',linewidth=3,color=AGENT_TYPES[typ][1],alpha=ALPH,label='Full implications vs. Ground PCR, '+AGENT_TYPES[typ][0])
+#ax_imps.legend()
 
 #- form the trajectories plots
 for typ in ORDERED_TYPES:
