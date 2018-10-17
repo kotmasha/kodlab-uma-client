@@ -2,13 +2,13 @@
 
 script: rnd_comp_light
 func: start_experiment
-Nruns: 100
+Nruns: 5
 
 params:
   mode: teleport
   discount: .75
   env_length: 20
-  total_cycles: 5000
+  total_cycles: 500
   ex_dataQ: False
   agent_dataQ: False
   name: comp_light
