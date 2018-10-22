@@ -1,6 +1,0 @@
-uma_bin_path: C:\\Users\\siqiHuang\\Documents\\GitHub\\UMA\\UMA_Encapsulated\\kodlab-uma-encapsulated\\bin
-
-tests:
-  script: experiment_test
-  name: test_experiment
-  params:
