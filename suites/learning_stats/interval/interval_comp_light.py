@@ -165,10 +165,8 @@ def start_experiment(run_params):
         '_Du':discounted_observer,
         '_Dv':discounted_observer,
         }
-    #ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
-    #ORDERED_TYPES=['_Q','_Ev','_Dv']
-    ORDERED_TYPES=['_Q','_Eu']
- 
+    ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
+    
     #Register "observer" agents:
     #  These agents remain inactive throghout the experiment, in order to record 
     #  all the UNCONDITIONAL implications among the initial sensors (in their 'minus'
@@ -398,9 +396,9 @@ def start_experiment(run_params):
     #- import weight matrices from core
     id_weights={typ:EX.register('wgt'+typ) for typ in ORDERED_TYPES}
     def weights(state,typ):
-        print typ+' weights:'
-        print convert_weights(state[id_internal[typ]][0]['weights'])
-        print '\n'
+        #print typ+' weights:'
+        #print convert_weights(state[id_internal[typ]][0]['weights'])
+        #print '\n'
         return flatten(state[id_internal[typ]][0]['weights'])
 
     for typ in ORDERED_TYPES:    
@@ -410,9 +408,9 @@ def start_experiment(run_params):
     #- import raw implications from core
     id_raw_imps={typ:EX.register('raw'+typ) for typ in ORDERED_TYPES}
     def raw_imps(state,typ):
-        print typ+' implications:'
-        print convert_raw_implications(state[id_internal[typ]][0]['dirs'])
-        print '\n'
+        #print typ+' implications:'
+        #print convert_raw_implications(state[id_internal[typ]][0]['dirs'])
+        #print '\n'
         return flatten(state[id_internal[typ]][0]['dirs'])
 
     INIT=[(1 if x==y else 0) for y in xrange(2*NSENSORS) for x in xrange(y+1)] #initialize to (lower triangle of) identity matrix

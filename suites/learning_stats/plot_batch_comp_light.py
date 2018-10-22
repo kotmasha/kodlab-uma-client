@@ -149,8 +149,8 @@ AGENT_TYPES={
     '_Du':['discounted uniform','xkcd:forest green'],
     '_Dv':['discounted value-based','xkcd:green'],
     }
-#ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
-ORDERED_TYPES=['_Q','_Eu']
+ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
+#ORDERED_TYPES=['_Q','_Eu']
 NTYPES=len(ORDERED_TYPES)
 
 # length of the environment (due to differences between circle and interval):
