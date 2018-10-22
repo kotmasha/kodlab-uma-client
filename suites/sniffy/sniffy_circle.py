@@ -162,7 +162,7 @@ def start_experiment(run_params):
     # $id_sig$ has already been registered
 
     # signal scales with distance to target
-    rescaling = lambda r: r
+    rescaling = lambda r: int(r!=0)
     def sig(state):
         return rescaling(state[id_dist][0])
 
