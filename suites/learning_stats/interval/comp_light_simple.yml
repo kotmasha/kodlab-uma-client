@@ -2,16 +2,16 @@
 
 script: interval_comp_light
 func: start_experiment
-Nruns: 5
+Nruns: 100
 
 params:
   mode: teleport
   discount: .75
   env_length: 20
-  total_cycles: 500
+  total_cycles: 1000
   ex_dataQ: False
   agent_dataQ: False
-  name: comp_light
+  name: comp_teleport
   mids_to_record:
     - counter
     - pos
