@@ -27,6 +27,28 @@ create snapshot:
     agent_id: test_agent
     snapshot_id: test_snapshot
 
+update threshold:
+  method: PUT
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    threshold: 0.125
+
+update total:
+  method: PUT
+  url: /UMA/object/snapshot
+  status_code: 200
+  query:
+    experiment_id: test_experiment
+    agent_id: test_agent
+    snapshot_id: test_snapshot
+  data:
+    total: 1
+
 create sensor without sensor id:
   method: POST
   url: /UMA/object/sensor
@@ -559,6 +581,8 @@ tests:
   - create experiment
   - create agent
   - create snapshot
+  - update threshold
+  - update total
   - create sensor without sensor id
   - create sensor without compi sensor id
   - create sensor with invalid sensor_id

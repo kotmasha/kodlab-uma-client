@@ -111,6 +111,13 @@ class UMAClientWorld(UMAClientObject):
             print "delete experiment=%s failed!" % experiment_id
             return None
 
+    def reset(self):
+        result = self._service.post('/UMA/world/reset', data={})
+        if not result:
+            print "World reset failed"
+            return False
+        return True
+
 class UMAClientExperiment(UMAClientObject):
     def __init__(self, experiment_id, service):
         #self.logger = logging.getLogger("ClientExperiment")
@@ -119,6 +126,14 @@ class UMAClientExperiment(UMAClientObject):
 
     def get_experiment_id(self):
         return self._experiment_id
+
+    def get_experiment_info(self):
+        data = {'experiment_id': self._experiment_id}
+        result = self._service.get('/UMA/object/experiment', data)
+        if not result:
+            return None
+        else:
+            return result['data']
 
     def add_agent(self, agent_id, **kwargs):
         data = {'experiment_id': self._experiment_id, 'agent_id': agent_id}
@@ -142,6 +157,14 @@ class UMAClientAgent(UMAClientObject):
 
     def get_agent_id(self):
         return self._agent_id
+
+    def get_agent_info(self):
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id}
+        result = self._service.get('/UMA/object/agent', data)
+        if not result:
+            return None
+        else:
+            return result['data']
 
     def add_snapshot(self, snapshot_id):
         data = {'snapshot_id': snapshot_id, 'agent_id': self._agent_id, 'experiment_id': self._experiment_id}
@@ -168,6 +191,14 @@ class UMAClientSnapshot(UMAClientObject):
 
     def get_snapshot_id(self):
         return self._snapshot_id
+
+    def get_snapshot_info(self):
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
+        result = self._service.get('/UMA/object/snapshot', data)
+        if not result:
+            return None
+        else:
+            return result['data']
 
     def add_sensor(self, sensor_id, c_sensor_id):
         data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
