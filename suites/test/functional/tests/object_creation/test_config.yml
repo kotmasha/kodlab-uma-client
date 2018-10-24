@@ -1,0 +1,7 @@
+tests:
+  script: object_creation_test
+  name:
+    - test_experiment_creation
+    - test_agent_creation
+    - test_snapshot_creation_with_parameters
+  params:
