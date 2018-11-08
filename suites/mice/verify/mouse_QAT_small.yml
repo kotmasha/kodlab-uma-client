@@ -2,7 +2,7 @@
 
 script: mouse_single_small
 func: start_experiment
-Nruns: 1
+Nruns: 10
 
 params:
   name: mouse_QAT_small
@@ -27,4 +27,5 @@ params:
     - che_out
     - sig_step
     - sig_turn
+    - mdist
 

@@ -48,10 +48,13 @@ def start_experiment(run_params):
     #
 
     arena = Arena_base(XBOUNDS,YBOUNDS,eval(run_params['out_of_bounds']))
-    arena.addRandomMouse('mus',viewportSize)
     # initial number of cheeses is set to satisfy, on average, the cheesesPerView constraint
     cheeseNum=int(np.floor(cheesesPerView*((XBOUNDS[1]-XBOUNDS[0]+0.0)*(YBOUNDS[1]-YBOUNDS[0]))/(4.0*pow(viewportSize,2))))
     arena.addRandomCheeses(cheeseNum,cheeseParams)
+    # add a mouse at the position of one of the cheeses
+    mouseAttr={'viewSize':viewportSize,'direction':[North,West,South,East][rnd(4)]}
+    mouseInitPos=arena._objects['ch1']._pos
+    arena.addMouse('mus',mouseInitPos,mouseAttr,{})
 
     ### Mouse/Agents parameters
     #
@@ -324,13 +327,22 @@ def start_experiment(run_params):
     ### MOTIVATIONAL SIGNALS
     #
 
+    #ell_one distance to nearest cheese
+    id_mdist=EX.register('mdist')
+    def getMinCheeseDist(state):
+        return state[id_mouse][0].mdist()
+    INIT=EX.this_state(id_mouse).mdist()
+    EX.construct_measurable(id_mdist,getMinCheeseDist,[INIT,INIT],depth=1)
     # stepping motivational signal (already registered)
     if SnapType=='qualitative':
-        # signal is the ellone distance to the closest cheese
-        def getMinCheeseDist(state):
-            return state[id_mouse][0].mdist()
-        INIT=EX.this_state(id_mouse).mdist()
-        EX.construct_measurable(id_sig_step,getMinCheeseDist,[INIT],depth=0)
+        # signal is 3 if getting farther from closest cheese
+        #           2 if staying at same distance
+        #           1 if getting closer to nearest cheese
+        #           0 when reaching/staying at the position of the nearest cheese
+        def step_signal(state):
+            return 2+(state[id_mdist][0]-state[id_mdist][1]) if state[id_mdist][0]!=0 else 0
+        INIT=2
+        EX.construct_measurable(id_sig_step,step_signal,[INIT,INIT])
     else:
         rescaling_step = lambda x:x
         def getElevation(state):
