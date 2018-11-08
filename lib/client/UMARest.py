@@ -145,6 +145,14 @@ class UMAClientExperiment(UMAClientObject):
         else:
             return UMAClientAgent(self._experiment_id, agent_id, self.get_service())
 
+    def save_experiment(self):
+        data = {'experiment_id': self._experiment_id}
+        result = self._service.post('/UMA/object/experiment/save', data)
+        if not result:
+            print "Saving Experiment=%s failed!" % self._experiment_id
+        else:
+            print "Experiment=%s is successfully saved!" % self._experiment_id
+
 class UMAClientAgent(UMAClientObject):
     def __init__(self, experiment_id, agent_id, service):
         #self.logger = logging.getLogger("ClientAgent")
