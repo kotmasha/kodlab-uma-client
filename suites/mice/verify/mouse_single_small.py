@@ -353,7 +353,8 @@ def start_experiment(run_params):
 
     # turning motivational signal    
     if SnapType=='qualitative':
-        rescaling_turn = lambda x: 16-int(np.floor(pow(4,1+x)))
+        #rescaling_turn = lambda x: 16-int(np.floor(pow(4,1+x)))
+        rescaling_turn = lambda x: 0 if pow(4,1+x)>=15 else (1 if pow(4,1+x)>=11 else 2)
     else:
         rescaling_turn = lambda x: pow(4.,1+x)
 

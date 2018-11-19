@@ -151,7 +151,11 @@ AGENT_TYPES={
     }
 #ORDERED_TYPES=['_Q','_Eu','_Ev','_Du','_Dv']
 #ORDERED_TYPES=['_Eu','_Du']
+<<<<<<< HEAD
+ORDERED_TYPES=['_Q','_Ev','_Dv']
+=======
 ORDERED_TYPES=['_Q','_Eu']
+>>>>>>> 25850924b7ce01f3c9bfb0969867a997c104c27d
 NTYPES=len(ORDERED_TYPES)
 
 # length of the environment (due to differences between circle and interval):

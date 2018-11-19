@@ -1,5 +1,8 @@
 import numpy as np
+from operator import sub
+from operator import concat
 from numpy.random import randint as rnd
+from numpy.random import seed
 from collections import deque
 from functools import partial
 #import curses
@@ -56,14 +59,19 @@ def convert_full_implications(matr):
 # convert dirs data into a matrix
 def convert_raw_implications(matr):
     L=len(matr)
+    new_matr=np.zeros((L,L),dtype=int)
     for i in range(L):
         for j in range(L):
             if j >= len(matr[i]):
                 try:
-                    matr[i].append(matr[compi(j)][compi(i)])
+                    new_matr[i][j]+=matr[compi(j)][compi(i)]
+                    #matr[i].append(matr[compi(j)][compi(i)])
                 except IndexError:
-                    matr[i].append(False)
-    return np.matrix(matr,dtype=int)
+                    pass
+            else:
+                new_matr[i][j]+=matr[i][j]
+                    #matr[i].append(False)
+    return new_matr
 
 # convert weights data into a matrix
 def convert_weights(matr):
@@ -77,16 +85,18 @@ def convert_weights(matr):
                 newmatr[i].append(matr[i][j])
     return np.matrix(newmatr)
 
-def ellone(x,y):
-    #assuming x,y are np arrays of the same shape, 
-    #return the ell-1 distance between them:
-    return np.sum(np.abs(x-y))
+def ldiff(x,y): # pointwise difference between lists
+    return map(abs,map(sub,x,y))
 
+def flatten(ls): # concatenation of elements in a list of lists
+    return reduce(concat, ls)
 
 ###################################
 
 
 def start_experiment(run_params):
+    # set randmization seed
+    SEED=seed()
     # System parameters
     test_name=run_params['test_name']
     host = run_params['host']
@@ -273,11 +283,20 @@ def start_experiment(run_params):
     # sensor footprints for this run
     fp=lambda sensor_ind: np.array(FOOTPRINTS[sensor_ind])
 
+    #get internal data for each agent
+    id_internal={}
+    def get_internal(state,typ):
+        return OBSACCESS[typ].get_all()
+    INIT={}
+    for typ in ORDERED_TYPES:
+        id_internal[typ]=EX.register('internal'+typ)
+        EX.construct_measurable(id_internal[typ],partial(get_internal,typ=typ),[INIT],depth=0)
+
     #Construct footprint-type estimate of target position
     id_targ={}
     def look_up_target(state,typ):
         target_fp=np.ones(ENV_LENGTH)
-        for ind,val in enumerate(OBSACCESS[typ].getTarget()):
+        for ind,val in enumerate(state[id_internal[typ]][0]['target']):
             target_fp=target_fp*fp(ind) if val else target_fp
         return target_fp.tolist()
     #- construct target estimate measurable for each observer
@@ -321,84 +340,131 @@ def start_experiment(run_params):
     #Ground truth implication matrices
     #
     #- check for inclusions among footprint vectors:
-    std_imp_check=lambda x,y: all(x<=y)
+    std_imp_check=lambda x,y: all(fp(x)<=fp(y))
 
-    #- check for ground truth thresholded inclusions
+    #- check for ground truth thresholded inclusions (footprint-based)
     def lookup_val(x,y,typ):
+        #obtain footprints
+        FPx=fp(x)
+        FPy=fp(y)
+        #compute the expected ground weights
         if typ=='_Q':
-            return -1 if not sum(x*y) else np.extract(x*y,vm(typ)).min()
+            return -1 if not sum(FPx*FPy) else np.extract(FPx*FPy,vm(typ)).min()
         else:
-            return (sum(x*y*vm(typ))+0.)/sum(vm(typ)) #replace by ENV_LENGTH?
+            #return (sum(FPx*FPy*vm(typ))+0.)/ENV_LENGTH
+            return (sum(FPx*FPy*vm(typ))+0.)/sum(vm(typ)+0.)
 
-    #- check for [ground truth] implications
+    #- check for [ground truth] implications (index based)
     def imp_check(x,y,typ):
         XY=lookup_val(x,y,typ)
-        X_Y=lookup_val(fcomp(x),y,typ)
-        X_Y_=lookup_val(fcomp(x),fcomp(y),typ)
-        XY_=lookup_val(x,fcomp(y),typ)
+        X_Y=lookup_val(compi(x),y,typ)
+        X_Y_=lookup_val(compi(x),compi(y),typ)
+        XY_=lookup_val(x,compi(y),typ)
         if typ=='_Q': #qualitative implication (zero threshold)
-            return qless(qmax(XY,X_Y_),XY_)
+            return int(qless(qmax(XY,X_Y_),XY_))
         else: #real-valued (statistical) implication
-            return XY_<min(sum(vm(typ))*Threshold,XY,X_Y_,X_Y) or (XY_==0 and X_Y==0)
+            if y==x:
+                #same sensor yields a True entry
+                return 1
+            elif y==compi(x):
+                #complementary sensors yield a False entry
+                return 0
+            else:
+                #otherwise, compare weights:
+                #return int(XY_<min(Threshold*sum(vm(typ)),XY,X_Y_,X_Y) or (XY_==0. and X_Y==0.))
+                return int(XY_<min(Threshold,XY,X_Y_,X_Y) or (XY_==0. and X_Y==0.))
 
-    #- construct the ground truth PCR matrices for each run and type
-    GROUND_WEIGHTS={}
-    GROUND_RAW_IMPS={}
-    for typ in ORDERED_TYPES:
-        lookup=lambda x,y: lookup_val(x,y,typ)
-        check=lambda x,y: imp_check(x,y,typ)
-        # Weight matrix computed from known values of states
-        GROUND_WEIGHTS[typ]=np.matrix([[lookup(fp(yind),fp(xind)) for xind in xrange(2*NSENSORS)] for yind in xrange(2*NSENSORS)])
-        # PCR matrix computed from known values of states; note the transpose!!
-        GROUND_RAW_IMPS[typ]=np.matrix([[check(fp(yind),fp(xind)) for xind in xrange(2*NSENSORS)] for yind in xrange(2*NSENSORS)],dtype=int)
-    GROUND_ABS_IMPS=np.matrix([[std_imp_check(fp(yind),fp(xind)) for xind in xrange(2*NSENSORS)] for yind in xrange(2*NSENSORS)],dtype=int)
+    #- construct the ground truth matrices (flattened) for each run and type
+    GROUND_WEIGHTS={typ:[] for typ in ORDERED_TYPES}
+    GROUND_RAW_IMPS={typ:[] for typ in ORDERED_TYPES}
+    GROUND_ABS_IMPS=[]
+    for yind in xrange(2*NSENSORS):
+        for xind in xrange(yind+1):
+            #weights and other expected implications, by type:
+            for typ in ORDERED_TYPES:
+                lookup=partial(lookup_val,typ=typ)
+                check=partial(imp_check,typ=typ)
+                # Weight matrix computed from known values of states
+                GROUND_WEIGHTS[typ].append(lookup(yind,xind))
+                # PCR matrix computed from known values of states; note the transpose!!
+                GROUND_RAW_IMPS[typ].append(check(yind,xind))
+    #absolute ground-truth implications:
+    for yind in xrange(2*NSENSORS):
+        for xind in xrange(yind+1):
+            GROUND_ABS_IMPS.append(std_imp_check(yind,xind))
+        if yind%2==0:
+            GROUND_ABS_IMPS.append(0)
+
 
     #- import weight matrices from core
     id_weights={typ:EX.register('wgt'+typ) for typ in ORDERED_TYPES}
     def weights(state,typ):
-        return convert_weights(OBSACCESS[typ].get_weights())
+        #print typ+' weights:'
+        #print convert_weights(state[id_internal[typ]][0]['weights'])
+        #print '\n'
+        return flatten(state[id_internal[typ]][0]['weights'])
+
     for typ in ORDERED_TYPES:    
-        INIT = -np.ones((2*NSENSORS,2*NSENSORS)) if typ=='_Q' else np.zeros((2*NSENSORS,2*NSENSORS))
+        INIT = (-np.ones(NSENSORS*(2*NSENSORS+1)) if typ=='_Q' else np.zeros(NSENSORS*(2*NSENSORS+1))).tolist()
         EX.construct_measurable(id_weights[typ],partial(weights,typ=typ),[INIT],depth=0)
 
     #- import raw implications from core
     id_raw_imps={typ:EX.register('raw'+typ) for typ in ORDERED_TYPES}
     def raw_imps(state,typ):
-        return convert_raw_implications(OBSACCESS[typ].get_dirs())
-    INIT=np.identity(2*NSENSORS)
+        #print typ+' implications:'
+        #print convert_raw_implications(state[id_internal[typ]][0]['dirs'])
+        #print '\n'
+        return flatten(state[id_internal[typ]][0]['dirs'])
+
+    INIT=[(1 if x==y else 0) for y in xrange(2*NSENSORS) for x in xrange(y+1)] #initialize to (lower triangle of) identity matrix
     for typ in ORDERED_TYPES:
         EX.construct_measurable(id_raw_imps[typ],partial(raw_imps,typ=typ),[INIT],depth=0)
      
     #- import full implications from core
     id_full_imps={typ:EX.register('full'+typ) for typ in ORDERED_TYPES}
     def full_imps(state,typ):
-        return convert_full_implications(OBSACCESS[typ].get_npdirs())
-    INIT=np.identity(2*NSENSORS)
+        return flatten(state[id_internal[typ]][0]['npdirs'])
+
+    xr=lambda y: y+2 if y%2==0 else y+1
+    INIT=[(1 if x==y else 0) for y in xrange(2*NSENSORS) for x in xrange(xr(y))] #initialize to (lower 2*2 triangle of) identity matrix
     for typ in ORDERED_TYPES:
         EX.construct_measurable(id_full_imps[typ],partial(full_imps,typ=typ),[INIT],depth=0)
 
     #- ell_infinity distance of current weights to ground truth
     id_wdiffs={typ:EX.register('wdiff'+typ) for typ in ORDERED_TYPES}
     def wdiffs(state,typ):
-        return np.max(np.abs(state[id_weights[typ]][0]-GROUND_WEIGHTS[typ]))
+        #print state[id_weights[typ]][0]
+        return max(ldiff(state[id_weights[typ]][0],GROUND_WEIGHTS[typ]))
+
     for typ in ORDERED_TYPES:
-        INIT=np.max(np.abs(EX.this_state(id_weights[typ])-GROUND_WEIGHTS[typ]))
+        #print '\n\n'
+        #print EX.this_state(id_weights[typ])
+        #print len(EX.this_state(id_weights[typ]))
+        #print '\n\n'
+        #print GROUND_WEIGHTS[typ]
+        #print len(GROUND_WEIGHTS[typ])
+        #print '\n\n'
+        INIT=max(ldiff(EX.this_state(id_weights[typ]),GROUND_WEIGHTS[typ]))
         EX.construct_measurable(id_wdiffs[typ],partial(wdiffs,typ=typ),[INIT],depth=0)
  
     #- ell_one distance of learned PCR to expected ground truth PCR
     id_rawdiffs={typ:EX.register('rdiff'+typ) for typ in ORDERED_TYPES}
     def rawdiffs(state,typ):
-        return ellone(state[id_raw_imps[typ]][0],GROUND_RAW_IMPS[typ])
+        return sum(ldiff(state[id_raw_imps[typ]][0],GROUND_RAW_IMPS[typ]))
     for typ in ORDERED_TYPES:
-        INIT=ellone(EX.this_state(id_raw_imps[typ]),GROUND_RAW_IMPS[typ])
+        #print '\n\n'
+        #print EX.this_state(id_raw_imps[typ])
+        #print GROUND_RAW_IMPS[typ]
+        #print '\n\n'
+        INIT=sum(ldiff(EX.this_state(id_raw_imps[typ]),GROUND_RAW_IMPS[typ]))
         EX.construct_measurable(id_rawdiffs[typ],partial(rawdiffs,typ=typ),[INIT],depth=0)
 
     #- ell_one distance of FULL implications to true ABSOLUTE implications
     id_fulldiffs={typ:EX.register('fdiff'+typ) for typ in ORDERED_TYPES}
     def fulldiffs(state,typ):
-        return ellone(state[id_full_imps[typ]][0],GROUND_ABS_IMPS)
+        return sum(ldiff(state[id_full_imps[typ]][0],GROUND_ABS_IMPS))
     for typ in ORDERED_TYPES:
-        INIT=ellone(EX.this_state(id_full_imps[typ]),GROUND_ABS_IMPS)
+        INIT=sum(ldiff(EX.this_state(id_full_imps[typ]),GROUND_ABS_IMPS))
         EX.construct_measurable(id_fulldiffs[typ],partial(fulldiffs,typ=typ),[INIT],depth=0)
     # -------------------------------------init--------------------------------------------
 
@@ -421,11 +487,15 @@ def start_experiment(run_params):
     default_instruction=[cid_obs[typ] for typ in ORDERED_TYPES]
     EX.update_state(default_instruction)
     recorder=experiment_output(EX,run_params)
+    recorder.addendum('rnd_seed',SEED)
     recorder.addendum('query_ids',QUERY_IDS)
     recorder.addendum('threshold',Threshold)
     recorder.addendum('Nsensors',NSENSORS)
     recorder.addendum('env_length',ENV_LENGTH)
     recorder.addendum('ground_targ',GROUND_TARG)
+    recorder.addendum('ground_weights',GROUND_WEIGHTS)
+    recorder.addendum('ground_raw_imps',GROUND_RAW_IMPS)
+    recorder.addendum('ground_abs_imps',GROUND_ABS_IMPS)
     recorder.record()
 
     # -------------------------------------RUN--------------------------------------------
