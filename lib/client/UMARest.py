@@ -145,6 +145,14 @@ class UMAClientExperiment(UMAClientObject):
         else:
             return UMAClientAgent(self._experiment_id, agent_id, self.get_service())
 
+    def save_experiment(self):
+        data = {'experiment_id': self._experiment_id}
+        result = self._service.post('/UMA/object/experiment/save', data)
+        if not result:
+            print "Saving Experiment=%s failed!" % self._experiment_id
+        else:
+            print "Experiment=%s is successfully saved!" % self._experiment_id
+
 class UMAClientAgent(UMAClientObject):
     def __init__(self, experiment_id, agent_id, service):
         #self.logger = logging.getLogger("ClientAgent")
@@ -174,6 +182,15 @@ class UMAClientAgent(UMAClientObject):
             return None
         else:
             return UMAClientSnapshot(self._experiment_id, self._agent_id, snapshot_id, self.get_service())
+
+    def copy_agent(self, to_experiment_id, new_agent_id):
+        data = {'experiment_id1': self._experiment_id, 'agent_id1': self._agent_id,
+                'experiment_id2': to_experiment_id, 'agent_id2': new_agent_id}
+        result = self._service.post('/UMA/object/agent/copy', data)
+
+        if not result:
+            print "agent copy from %s:%s to %s failed!" % (self._experiment_id, self._agent_id, to_experiment_id)
+        ###### TODO return a list of the new agent schema
 
 class UMAClientSnapshot(UMAClientObject):
     def __init__(self, experiment_id, agent_id, snapshot_id, service):
