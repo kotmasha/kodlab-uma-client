@@ -1,0 +1,7 @@
+tests:
+  script: agent_copy
+  name:
+    #- test_agent_copy_simple
+    #- test_agent_copy
+    - test_saving_loading_copy
+  params:

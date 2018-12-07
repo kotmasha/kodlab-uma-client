@@ -20,6 +20,7 @@ class UMARestService:
             #self._log.write("Errors while doing post request " + uri + ': ' + str(e) + '\n')
             return None
         if r.status_code >= 400 and r.status_code < 500:
+            print str(r.json()['message'])
             #self._log.write("Client Error(" + str(r.status_code) + "): " + str(r.json()['message'] + '\n'))
             return None
         if r.status_code >= 500:
@@ -153,6 +154,15 @@ class UMAClientExperiment(UMAClientObject):
         else:
             print "Experiment=%s is successfully saved!" % self._experiment_id
 
+    def load_experiment(self):
+        data = {'experiment_id': self._experiment_id}
+        result = self._service.post('/UMA/object/experiment/load', data)
+
+        if not result:
+            print "Loading Experiment=%s failed!" % self._experiment_id
+        else:
+            print "Experiment=%s is successfully loaded!" % self._experiment_id
+
 class UMAClientAgent(UMAClientObject):
     def __init__(self, experiment_id, agent_id, service):
         #self.logger = logging.getLogger("ClientAgent")
@@ -186,11 +196,24 @@ class UMAClientAgent(UMAClientObject):
     def copy_agent(self, to_experiment_id, new_agent_id):
         data = {'experiment_id1': self._experiment_id, 'agent_id1': self._agent_id,
                 'experiment_id2': to_experiment_id, 'agent_id2': new_agent_id}
-        result = self._service.post('/UMA/object/agent/copy', data)
+        result = self._service.post('/UMA/object/agent/copy', data=data)
 
         if not result:
             print "agent copy from %s:%s to %s failed!" % (self._experiment_id, self._agent_id, to_experiment_id)
-        ###### TODO return a list of the new agent schema
+
+        # get the schema for the newly created agent
+        res = {}
+        query = {'experiment_id': to_experiment_id, 'agent_id': new_agent_id}
+        agent_info = self._service.get('/UMA/object/agent', query=query)['data']
+        res['agent_id'] = new_agent_id
+        res['type'] = agent_info['type']
+
+        for snapshot_id, snapshot_type in agent_info['snapshot_ids']:
+            query = {'experiment_id': to_experiment_id, 'agent_id': new_agent_id, 'snapshot_id': snapshot_id}
+            snapshot_info = self._service.get('/UMA/object/snapshot', query=query)
+            res[snapshot_id] = snapshot_info['data']
+
+        return res
 
 class UMAClientSnapshot(UMAClientObject):
     def __init__(self, experiment_id, agent_id, snapshot_id, service):

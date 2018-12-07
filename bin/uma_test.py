@@ -48,7 +48,7 @@ def launch_test(data):
     for func_name in data['tests']['name']:
         func = getattr(script, func_name)
         func()
-        print "test passed for %s" %func_name
+        print "-------------------test passed for %s-------------------" %func_name
         time.sleep(2)
 
 if __name__ == '__main__':
