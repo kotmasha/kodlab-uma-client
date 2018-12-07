@@ -5,6 +5,7 @@ from subprocess import call
 from ConfigParser import SafeConfigParser
 from cluster.cluster_setting import *
 import platform
+from UMA.som2_noEP import *
 
 current_dir = os.getcwd()
 uma_core_test_bin = os.path.join(UMA_SIM_HOME, 'suites', 'test', 'functional', 'playground', 'bin')
@@ -26,6 +27,12 @@ def stop_uma():
     cmd = [binary_name, 'stop']
     call(cmd)
     os.chdir(current_dir)
+
+# create an experiment, return the EX som2 obj
+def create_experiment(experiment_id, service):
+    EX = Experiment(experiment_id, service)
+
+    return EX
 
 # update the conf file
 def update_ini(ini_path, stanza, kwargs):

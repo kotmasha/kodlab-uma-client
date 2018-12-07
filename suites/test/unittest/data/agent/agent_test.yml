@@ -89,6 +89,7 @@ get agent:
     experiment_id: test_experiment
     agent_id: test_agent
   kwargs:
+    type: Stationary
     snapshot_ids:
       - [test_snapshot1, Stationary]
       - [test_snapshot2, Stationary]
@@ -113,7 +114,7 @@ delete agent:
   method: DELETE
   url: /UMA/object/agent
   status_code: 200
-  message: Agent=test_agent is deleted
+  message: AgentId=test_agent is deleted
   data:
     experiment_id: test_experiment
     agent_id: test_agent
@@ -166,6 +167,7 @@ get agent qualitative:
     experiment_id: test_experiment
     agent_id: test_agent
   kwargs:
+    type: Qualitative
     snapshot_ids:
       - [test_snapshot1, Qualitative]
       - [test_snapshot2, Qualitative]
