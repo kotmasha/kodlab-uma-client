@@ -9,12 +9,22 @@ create experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -24,6 +34,7 @@ create snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -33,6 +44,7 @@ update threshold:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -44,6 +56,7 @@ update total:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -56,6 +69,7 @@ create sensor without sensor id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     c_sid: c_test_sensor
@@ -70,6 +84,7 @@ create sensor without compi sensor id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: test_sensor
@@ -84,6 +99,7 @@ create sensor with invalid sensor_id:
   message: Cannot parsing the field
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: 123.45
@@ -99,6 +115,7 @@ create sensor without agent id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     snapshot_id: test_snapshot
     sensor_id: test_sensor
     c_sid: c_test_sensor
@@ -113,6 +130,7 @@ create sensor without snapshot id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     sensor_id: test_sensor
     c_sid: c_test_sensor
@@ -127,6 +145,7 @@ create sensor with invalid agent id:
   message: Cannot find the agent id
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: abc
     snapshot_id: test_snapshot
     sensor_id: test_sensor
@@ -142,6 +161,7 @@ create sensor with invalid agent id:
   message: Cannot find the snapshot id
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: abc
     sensor_id: test_sensor
@@ -157,6 +177,7 @@ create sensor without d and w:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: abc
     sensor_id: test_sensor
@@ -168,6 +189,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -183,6 +205,7 @@ create sensor1 duplicate:
   message: Cannot create a duplicate sensor
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -197,6 +220,7 @@ get sensor sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -212,6 +236,7 @@ get sensor c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor1
@@ -227,6 +252,7 @@ get sensor pair sensor1 sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor1
@@ -240,6 +266,7 @@ get sensor pair sensor1 c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor1
@@ -253,6 +280,7 @@ change snapshot threshold:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -264,6 +292,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -278,6 +307,7 @@ get sensor pair sensor1 sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor1
@@ -291,6 +321,7 @@ get sensor pair sensor1 c_sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor1
@@ -304,6 +335,7 @@ get sensor pair c_sensor1 sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: c_sensor1
@@ -317,6 +349,7 @@ get sensor pair c_sensor1 c_sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: c_sensor1
@@ -330,6 +363,7 @@ get sensor pair sensor2 sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor2
@@ -343,6 +377,7 @@ get sensor pair sensor2 c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: sensor2
@@ -356,6 +391,7 @@ get sensor pair c_sensor2 sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: c_sensor2
@@ -369,6 +405,7 @@ get sensor pair c_sensor2 c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor1: c_sensor2
@@ -382,6 +419,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -396,6 +434,7 @@ create sensor4:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -410,6 +449,7 @@ create sensor5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -424,6 +464,7 @@ get c_sensor3:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor3
@@ -439,6 +480,7 @@ get sensor5:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -455,6 +497,7 @@ delete sensor without sensor id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -464,6 +507,7 @@ delete sensor3:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -474,6 +518,7 @@ get c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor1
@@ -489,6 +534,7 @@ get sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -505,6 +551,7 @@ get sensor3:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -516,6 +563,7 @@ get c_sensor3 2:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor3
@@ -526,6 +574,7 @@ get c_sensor4:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor4
@@ -541,6 +590,7 @@ get sensor5 2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -556,6 +606,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 get sensor5 after delete agent:
@@ -565,6 +616,7 @@ get sensor5 after delete agent:
   message: "No Resource Error Caught: Cannot find object, agentId=test_agent"
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -576,9 +628,11 @@ delete experiment:
   message: Experiment=test_experiment is deleted
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
 
 tests:
   - create experiment
+  - create a bua
   - create agent
   - create snapshot
   - update threshold

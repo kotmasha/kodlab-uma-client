@@ -9,6 +9,15 @@ create experiment:
   data:
     experiment_id: test_experiment
 
+create bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create agent without agent_id:
   method: POST
   url: /UMA/object/agent
@@ -22,6 +31,7 @@ create agent with invalid id:
   message: Cannot parsing the field
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: 123.45
 
 create an agent:
@@ -31,6 +41,7 @@ create an agent:
   message: Agent=test_agent is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -41,6 +52,7 @@ create an agent duplicate:
   message: Cannot create a duplicate agent
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -51,6 +63,7 @@ create snapshot1:
   message: Snapshot=test_snapshot1 is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot1
 
@@ -61,6 +74,7 @@ create snapshot2:
   message: Snapshot=test_snapshot2 is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot2
 
@@ -71,6 +85,7 @@ create snapshot3:
   message: Snapshot=test_snapshot3 is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot3
 
@@ -87,6 +102,7 @@ get agent:
   message: Get agent info
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
   kwargs:
     type: Stationary
@@ -108,6 +124,7 @@ delete agent with invlid agent_id:
   message: "No Resource Error Caught: Cannot find object, agentId=test_agent1"
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent1
 
 delete agent:
@@ -117,6 +134,7 @@ delete agent:
   message: AgentId=test_agent is deleted
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 get agent after delete:
@@ -125,6 +143,7 @@ get agent after delete:
   status_code: 404
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
   messaage: Cannot find the agent id
 
@@ -135,6 +154,7 @@ create an agent qualitative:
   message: Agent=test_agent is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: qualitative
 
@@ -145,6 +165,7 @@ create snapshot1 qualitative:
   message: Snapshot=test_snapshot1 is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot1
 
@@ -155,6 +176,7 @@ create snapshot2 qualitative:
   message: Snapshot=test_snapshot2 is created
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot2
 
@@ -165,6 +187,7 @@ get agent qualitative:
   message: Get agent info
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
   kwargs:
     type: Qualitative
@@ -182,6 +205,7 @@ delete experiment:
 
 tests:
   - create experiment
+  - create bua
   - create agent without agent_id
   - create agent with invalid id
   - create an agent

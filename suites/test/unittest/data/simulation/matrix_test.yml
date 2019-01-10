@@ -6,12 +6,22 @@ create an experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create an agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -21,6 +31,7 @@ create an snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -30,6 +41,7 @@ create sensor0:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor0
@@ -44,6 +56,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -58,6 +71,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -72,6 +86,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -86,6 +101,7 @@ create sensor4:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -100,6 +116,7 @@ npdirs:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -121,6 +138,7 @@ ups 0 2 4 6 8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -143,6 +161,7 @@ ups 0&8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -157,6 +176,7 @@ downs 0 2 4 6 8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -179,6 +199,7 @@ downs 0&8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -193,6 +214,7 @@ propagation 0 2 4 6 8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -216,6 +238,7 @@ propagation 0&8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -231,6 +254,7 @@ blocks case1 0.7:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 0.7
@@ -254,6 +278,7 @@ blocks case1 1.5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 1.5
@@ -276,6 +301,7 @@ blocks case1 2.2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 2.2
@@ -297,6 +323,7 @@ blocks case1 3.1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 3.1
@@ -317,6 +344,7 @@ delete sensor4:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -327,6 +355,7 @@ blocks case0 0.5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 0.5
@@ -348,6 +377,7 @@ blocks case0 1.5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 1.5
@@ -367,6 +397,7 @@ blocks case0 2.0:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delta: 2.01
@@ -385,6 +416,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete experiment:
@@ -393,10 +425,12 @@ delete experiment:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
   message: Experiment=test_experiment is deleted
 
 tests:
   - create an experiment
+  - create a bua
   - create an agent
   - create an snapshot
   - create sensor0

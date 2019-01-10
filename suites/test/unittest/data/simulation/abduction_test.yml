@@ -6,12 +6,23 @@ create an experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
+
 create an agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -21,6 +32,7 @@ create an snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -30,6 +42,7 @@ create sensor0:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor0
@@ -44,6 +57,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -58,6 +72,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -72,6 +87,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -86,6 +102,7 @@ create sensor4:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -100,6 +117,7 @@ delay 0&2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[True, False, True, False, False, False, False, False, False, False]]
@@ -111,6 +129,7 @@ delay 3&5&7:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[False, False, False, True, False, True, False, True, False, False, False, False]]
@@ -122,6 +141,7 @@ delay 1&5&10&13:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[False, True, False, False, False, True, False, False, False, False, True, False, False, True]]
@@ -133,6 +153,7 @@ npdirs:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -142,6 +163,7 @@ propagate mask:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -161,6 +183,7 @@ abduction even:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -190,6 +213,7 @@ abduction odd:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -219,6 +243,7 @@ abduction mix:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals:
@@ -244,6 +269,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete experiment:
@@ -252,10 +278,12 @@ delete experiment:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
   message: Experiment=test_experiment is deleted
 
 tests:
   - create an experiment
+  - create a bua
   - create an agent
   - create an snapshot
   - create sensor0

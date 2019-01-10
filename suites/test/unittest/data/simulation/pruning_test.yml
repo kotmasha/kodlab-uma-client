@@ -6,12 +6,22 @@ create an experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -21,6 +31,7 @@ create snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -30,6 +41,7 @@ create sensor0:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor0
@@ -44,6 +56,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -58,6 +71,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -72,6 +86,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -86,6 +101,7 @@ amper 1&6:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[False, True, False, False, False, False, True, False]]
@@ -97,6 +113,7 @@ delay 0&8:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[True, False, False, False, False, False, False, False, True, False]]
@@ -108,6 +125,7 @@ get snapshot 6 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -126,6 +144,7 @@ get data size 6 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -149,6 +168,7 @@ pruning 4 5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals: [False, False, False, False, False, False, False, False, True, True, True, True]
@@ -159,6 +179,7 @@ get snapshot 4 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -175,6 +196,7 @@ get data size 4 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -198,6 +220,7 @@ amper 1&3&6:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     amper_lists: [[False, True, False, True, False, False, True, False, False, False, False, False]]
@@ -209,6 +232,7 @@ get snapshot 7 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -228,6 +252,7 @@ get data size 7 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -251,6 +276,7 @@ pruning 0 2 3 4 6:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals: [True, True, False, False, True, True, True, True, True, True, False, False, True, True]
@@ -261,6 +287,7 @@ get snapshot 2 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -275,6 +302,7 @@ get data size 2 sensor:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -298,6 +326,7 @@ get sensor5 amper list:
   status_code : 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -310,6 +339,7 @@ pruning 1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals: [False, False, True, True]
@@ -320,6 +350,7 @@ pruning 0 2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     signals: [True, True, False, False, True, True, False, False, False, False, False, False, False, False]
@@ -330,6 +361,7 @@ get sensor4 amper list:
   status_code : 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -342,6 +374,7 @@ get sensor5 amper list1:
   status_code : 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -354,6 +387,7 @@ get sensor6 amper list:
   status_code : 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor6
@@ -366,6 +400,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete experiment:
@@ -374,10 +409,12 @@ delete experiment:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
   message: Experiment=test_experiment is deleted
 
 tests:
   - create an experiment
+  - create a bua
   - create agent
   - create snapshot
   - create sensor0

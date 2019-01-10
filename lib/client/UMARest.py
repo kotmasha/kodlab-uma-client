@@ -136,38 +136,71 @@ class UMAClientExperiment(UMAClientObject):
         else:
             return result['data']
 
+    def add_bua(self, bua_id, **kwargs):
+        data = {'experiment_id': self._experiment_id, 'bua_id': bua_id}
+        data.update(kwargs)
+        result = self._service.post('/UMA/object/bua', data)
+        if not result:
+            print "create bua=%s failed!" % bua_id
+            return None
+        else:
+            return UMAClientAgent(self._experiment_id, bua_id, self.get_service())
+
+
+class UMAClientBua(UMAClientObject):
+    def __init__(self, experiment_id, bua_id, service):
+        #self.logger = logging.getLogger("ClientExperiment")
+        self._service = service
+        self._experiment_id = experiment_id
+        self._bua_id = bua_id
+
+    def get_bua_id(self):
+        return self._bua_id
+
+    def get_bua_info(self):
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id}
+        result = self._service.get('/UMA/object/bua', data)
+        if not result:
+            return None
+        else:
+            return result['data']
+
     def add_agent(self, agent_id, **kwargs):
-        data = {'experiment_id': self._experiment_id, 'agent_id': agent_id}
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id, 'agent_id': agent_id}
         data.update(kwargs)
         result = self._service.post('/UMA/object/agent', data)
         if not result:
             print "create agent=%s failed!" % agent_id
             return None
         else:
-            return UMAClientAgent(self._experiment_id, agent_id, self.get_service())
+            return UMAClientAgent(self._experiment_id, self._bua_id, agent_id, self.get_service())
 
-    def save_experiment(self):
-        data = {'experiment_id': self._experiment_id}
-        result = self._service.post('/UMA/object/experiment/save', data)
+    def save_bua(self, filename):
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id, 'filename': filename}
+        result = self._service.post('/UMA/object/bua/save', data)
         if not result:
-            print "Saving Experiment=%s failed!" % self._experiment_id
+            print "Saving Bua=%s failed!" % self._bua_id
         else:
-            print "Experiment=%s is successfully saved!" % self._experiment_id
+            print "Bua=%s is successfully saved!" % self._bua_id
 
-    def load_experiment(self):
-        data = {'experiment_id': self._experiment_id}
-        result = self._service.post('/UMA/object/experiment/load', data)
+    # experiment_id is the experiment the loaded bua will go into, filename is the filename to read
+    # bua id is id of new bua, it can be different from the old one from file
+    def load_bua(self, filename):
+        data = {'experiment_id': self._experiment_id,' bua_id': self._bua_id, 'filename': filename}
+        result = self._service.post('/UMA/object/bua/load', data)
 
         if not result:
-            print "Loading Experiment=%s failed!" % self._experiment_id
+            print "Loading Bua=%s failed!" % self._bua_id
         else:
-            print "Experiment=%s is successfully loaded!" % self._experiment_id
+            print "Bua=%s is successfully loaded!" % self._bua_id
+
 
 class UMAClientAgent(UMAClientObject):
-    def __init__(self, experiment_id, agent_id, service):
+    def __init__(self, experiment_id, bua_id, agent_id, service):
         #self.logger = logging.getLogger("ClientAgent")
         self._service = service
         self._experiment_id = experiment_id
+        self._bua_id = bua_id
         self._agent_id = agent_id
 
     def get_experiment_id(self):
@@ -177,7 +210,7 @@ class UMAClientAgent(UMAClientObject):
         return self._agent_id
 
     def get_agent_info(self):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id}
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id, 'agent_id': self._agent_id}
         result = self._service.get('/UMA/object/agent', data)
         if not result:
             return None
@@ -185,7 +218,8 @@ class UMAClientAgent(UMAClientObject):
             return result['data']
 
     def add_snapshot(self, snapshot_id):
-        data = {'snapshot_id': snapshot_id, 'agent_id': self._agent_id, 'experiment_id': self._experiment_id}
+        data = {'snapshot_id': snapshot_id, 'agent_id': self._agent_id,
+                'bua_id': self._bua_id, 'experiment_id': self._experiment_id}
         result = self._service.post('/UMA/object/snapshot', data)
         if not result:
             print "create snapshot=%s failed!" % snapshot_id
@@ -216,10 +250,11 @@ class UMAClientAgent(UMAClientObject):
         return res
 
 class UMAClientSnapshot(UMAClientObject):
-    def __init__(self, experiment_id, agent_id, snapshot_id, service):
+    def __init__(self, experiment_id, bua_id, agent_id, snapshot_id, service):
         #self.logger = logging.getLogger("ClientSnapshot")
         self._service = service
         self._experiment_id = experiment_id
+        self._bua_id = bua_id
         self._agent_id = agent_id
         self._snapshot_id = snapshot_id
 
@@ -233,7 +268,8 @@ class UMAClientSnapshot(UMAClientObject):
         return self._snapshot_id
 
     def get_snapshot_info(self):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id,
+                'bua_id': self._bua_id, 'snapshot_id': self._snapshot_id}
         result = self._service.get('/UMA/object/snapshot', data)
         if not result:
             return None
@@ -241,7 +277,8 @@ class UMAClientSnapshot(UMAClientObject):
             return result['data']
 
     def add_sensor(self, sensor_id, c_sensor_id):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id,
+                'bua_id': self._bua_id, 'snapshot_id': self._snapshot_id,
                 'sensor_id': sensor_id, 'c_sid': c_sensor_id, 'w': [], 'd': [], 'diag': []}
         result =  self._service.post('/UMA/object/sensor', data)
         if not result:
@@ -251,7 +288,8 @@ class UMAClientSnapshot(UMAClientObject):
             return UMAClientSensor(self._experiment_id, self._agent_id, self._snapshot_id, sensor_id, self.get_service())
 
     def init(self):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id,
+                'bua_id': self._bua_id, 'snapshot_id': self._snapshot_id}
         result = self._service.post('/UMA/object/snapshot/init', data)
         if not result:
             return None
@@ -259,26 +297,27 @@ class UMAClientSnapshot(UMAClientObject):
 
     def set_auto_target(self, auto_target):
         return self._service.put('/UMA/object/snapshot', {'auto_target': auto_target}, {'experiment_id': self._experiment_id,
-                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                        'bua_id': self._bua_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def set_propagate_mask(self, propagate_mask):
         return self._service.put('/UMA/object/snapshot', {'propagate_mask': propagate_mask}, {'experimentId': self._experiment_id,
-                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                        'agent_id': self._agent_id, 'bua_id': self._bua_id, 'snapshot_id': self._snapshot_id})
 
     def set_initial_size(self, initial_size):
         return self._service.put('/UMA/object/snapshot', {'initial_size': initial_size}, {'experiment_id': self._experiment_id,
-                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                        'bua_id': self._bua_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def set_q(self, q):
         return self._service.put('/UMA/object/snapshot', {'q': q}, {'experiment_id': self._experiment_id,
-                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                       'bua_id': self._bua_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def set_threshold(self, threshold):
         return self._service.put('/UMA/object/snapshot', {'threshold': threshold}, {'experiment_id': self._experiment_id,
-                        'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
+                       'bua_id': self._bua_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def delay(self, delay_list, uuid_list):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id,
+                'bua_id': self._bua_id, 'snapshot_id': self._snapshot_id,
                 'delay_lists': delay_list, 'uuid_lists': uuid_list}
         result = self._service.post('/UMA/object/snapshot/delay', data)
         if not result:
@@ -286,7 +325,7 @@ class UMAClientSnapshot(UMAClientObject):
         return True
 
     def pruning(self, signal):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
                 'signals': signal}
         result = self._service.post('/UMA/object/snapshot/pruning', data)
         if not result:
@@ -294,10 +333,11 @@ class UMAClientSnapshot(UMAClientObject):
         return True
 
 class UMAClientData:
-    def __init__(self, experiment_id, agent_id, snapshot_id, service):
+    def __init__(self, experiment_id, bua_id, agent_id, snapshot_id, service):
         #self.logger = logging.getLogger("ClientData")
         self._service = service
         self._experiment_id = experiment_id
+        self._bua_id = bua_id
         self._agent_id = agent_id
         self._snapshot_id = snapshot_id
 
@@ -311,55 +351,56 @@ class UMAClientData:
         return self._snapshot_id
 
     def getCurrent(self):
-        return self._service.get('/UMA/data/current', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/current', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                                     'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def getPrediction(self):
-        return self._service.get('/UMA/data/prediction', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/prediction', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                                     'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
     def getTarget(self):
-        return self._service.get('/UMA/data/target', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/target', {'experiment_id': self._experiment_id ,'bua_id': self._bua_id,
                                     'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['target']
 
     def getNegligible(self):
-        return self._service.get('/UMA/data/negligible', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/negligible', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['negligible']
 
     def get_npdirs(self):
-        return self._service.get('/UMA/data/npdirs', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/npdirs', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['npdirs']
 
     def get_dirs(self):
-        return self._service.get('/UMA/data/dirs', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/dirs', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['dirs']
 
     #added by dang:
     def get_weights(self):
-        return self._service.get('/UMA/data/weights', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/weights', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['weights']
 
     def get_propagate_masks(self):
-        return self._service.get('/UMA/data/propagateMasks', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/propagateMasks', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['propagate_masks']
 
     def get_all(self):
-        return self._service.get('/UMA/data/all', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/all', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']
 
     def get_mask_amper(self):
-        return self._service.get('/UMA/data/maskAmper', {'experiment_id': self._experiment_id,
+        return self._service.get('/UMA/data/maskAmper', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})['data']['mask_amper']
 
     def setTarget(self, target):
-        return self._service.put('/UMA/data/target',{'target': target}, {'experiment_id': self._experiment_id,
+        return self._service.put('/UMA/data/target',{'target': target}, {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                         'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id})
 
 class UMAClientSensor:
-    def __init__(self, experiment_id, agent_id, snapshot_id, sensor_id, service):
+    def __init__(self, experiment_id, bua_id, agent_id, snapshot_id, sensor_id, service):
         #self.logger = logging.getLogger("ClientSensor")
         self._service = service
         self._experiment_id = experiment_id
+        self._bua_id = bua_id
         self._agent_id = agent_id
         self._snapshot_id = snapshot_id
         self._sensor_id = sensor_id
@@ -377,7 +418,7 @@ class UMAClientSensor:
         return self._sensor_id
 
     def getAmperList(self):
-        result = self._service.get('/UMA/object/sensor', {'experiment_id': self._experiment_id,
+        result = self._service.get('/UMA/object/sensor', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                             'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id, 'sensor_id': self._sensor_id})
         if not result:
             return None
@@ -385,7 +426,7 @@ class UMAClientSensor:
         return result
 
     def getAmperListID(self):
-        result = self._service.get('/UMA/object/sensor', {'experiment_id': self._experiment_id,
+        result = self._service.get('/UMA/object/sensor', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                             'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id, 'sensor_id': self._sensor_id})
         if not result:
             return None
@@ -393,7 +434,7 @@ class UMAClientSensor:
         return result
 
     def setAmperList(self, amper_list):
-        result = self._service.post('/UMA/object/sensor', {'experiment_id': self._experiment_id,
+        result = self._service.post('/UMA/object/sensor', {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
                             'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id, 'sensor_id': self._sensor_id,
                             'amper_list': amper_list})
         if not result:
@@ -414,9 +455,9 @@ class UMAClientSimulation:
     def get_experiment_id(self):
         return self._experiment_id
 
-    def make_decision(self, agent_id, obs_plus, obs_minus, phi, active):
+    def make_decision(self, bua_id, agent_id, obs_plus, obs_minus, phi, active):
         #post to service:
-        data =  {'experiment_id': self._experiment_id, 'agent_id': agent_id, 'phi': phi,
+        data =  {'experiment_id': self._experiment_id, 'bua_id': bua_id, 'agent_id': agent_id, 'phi': phi,
                  'active': active, 'obs_plus': obs_plus, 'obs_minus': obs_minus}
         result = self._service.post('/UMA/simulation/decision', data)
         if not result:
@@ -429,7 +470,8 @@ class UMAClientSimulation:
         return {'plus': plus, 'minus': minus}
 
     def make_up(self, signal):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data =  {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
                  'signal': signal}
         result = self._service.post('/UMA/simulation/up', data)
         if not result:
@@ -437,7 +479,8 @@ class UMAClientSimulation:
         return list(result['data']['signal'])
 
     def make_abduction(self, signals):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data =  {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
                  'signals': signals}
         result = self._service.post('/UMA/simulation/abduction', data)
         if not result:
@@ -445,14 +488,16 @@ class UMAClientSimulation:
         return list(result['data']['abduction_even']), list(result['data']['abduction_odd'])
 
     def make_propagate_masks(self):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
+        data =  {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
         result = self._service.post('/UMA/simulation/propagateMasks', data)
         if not result:
             return None
         return list(result['data']['propagate_mask'])
 
     def make_ups(self, signals):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id,
+        data =  {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                 'agent_id': self._agent_id,
                  'snapshot_id': self._snapshot_id, 'signals': signals}
         result = self._service.post('/UMA/simulation/ups', data)
         if not result:
@@ -460,7 +505,8 @@ class UMAClientSimulation:
         return list(result['data']['signals'])
 
     def make_downs(self, signals):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data =  {'experiment_id': self._experiment_id,'bua_id': self._bua_id,
+                 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
                  'signals': signals}
         result = self._service.post('/UMA/simulation/downs', data)
         if not result:
@@ -468,7 +514,8 @@ class UMAClientSimulation:
         return list(result['data']['signals'])
 
     def make_propagation(self, signals, load):
-        data =  {'experimentId': self._experiment_id, 'agentId': self._agent_id, 'snapshotId': self._snapshot_id,
+        data =  {'experimentId': self._experiment_id, 'bua_id': self._bua_id,
+                 'agentId': self._agent_id, 'snapshotId': self._snapshot_id,
                  'signals': signals, 'load': load}
         result = self._service.post('/UMA/simulation/propagation', data)
         if not result:
@@ -476,7 +523,8 @@ class UMAClientSimulation:
         return list(result['data']['signals'])
 
     def make_blocks(self, dists, delta):
-        data =  {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
+        data =  {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id,
                  'dists': dists, 'delta': delta}
         result = self._service.post('/UMA/simulation/blocks', data)
         if not result:
@@ -484,7 +532,8 @@ class UMAClientSimulation:
         return list(result['data']['blocks'])
 
     def make_npdirs(self):
-        data = {'experiment_id': self._experiment_id, 'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
+        data = {'experiment_id': self._experiment_id, 'bua_id': self._bua_id,
+                'agent_id': self._agent_id, 'snapshot_id': self._snapshot_id}
         result = self._service.post('/UMA/simulation/npdirs', data)
         if not result:
             return None

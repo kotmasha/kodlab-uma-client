@@ -9,12 +9,22 @@ create an experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create an agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -25,6 +35,7 @@ create an snapshot without id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 create an snapshot with an invalid id(number):
@@ -34,6 +45,7 @@ create an snapshot with an invalid id(number):
   message: Cannot parsing the field
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: 123.45
 
@@ -44,6 +56,7 @@ create an snapshot without agent_id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     snapshot_id: test_snapshot
 
 create an snapshot with an invalid agent_id:
@@ -53,6 +66,7 @@ create an snapshot with an invalid agent_id:
   message: "No Resource Error Caught: Cannot find object, agentId=abc"
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: abc
     snapshot_id: test_snapshot
 
@@ -62,6 +76,7 @@ create an snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -72,6 +87,7 @@ create snapshot duplicate:
   message: Cannot create a duplicate snapshot
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -82,6 +98,7 @@ get snapshot info before:
   message: Get snapshot info
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -93,6 +110,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -107,6 +125,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -122,6 +141,7 @@ change q without giving snapshot id:
   message: Coming request is missing necessary fields
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
   data:
     q: 0.123
@@ -133,6 +153,7 @@ chagne q to 'abc':
   message: Cannot parsing the field
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -144,6 +165,7 @@ change q to 0.123:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -155,6 +177,7 @@ change threshold to 1.222:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -167,6 +190,7 @@ change auto target to 2.2:
   message: Cannot parsing the field
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -178,6 +202,7 @@ change auto target to True:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -189,6 +214,7 @@ change propagate mask to True:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -200,6 +226,7 @@ change initial size to 1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -212,6 +239,7 @@ get snapshot info after:
   message: Get snapshot info
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -230,6 +258,7 @@ snapshot init:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -240,6 +269,7 @@ get snapshot info after init:
   message: Get snapshot info
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -259,6 +289,7 @@ delete snapshot without snapshot id:
   message: Coming request is missing necessary fields
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete snapshot with invalid id:
@@ -268,6 +299,7 @@ delete snapshot with invalid id:
   message: "No Resource Error Caught: Cannot find the snapshot, snapshotId=test_snapshot1"
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot1
 
@@ -277,6 +309,7 @@ delete snapshot:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -286,6 +319,7 @@ put request after delete:
   status_code: 404
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -299,6 +333,7 @@ get request after delete:
   message: Cannot find the snapshot id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -308,6 +343,7 @@ clean up agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete experiment:
@@ -317,12 +353,14 @@ delete experiment:
   message: Experiment=test_experiment is deleted
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
 
 
 #######################
 
 tests:
   - create an experiment
+  - create a bua
   - create an agent
   - create an snapshot without id
   - create an snapshot with an invalid id(number)

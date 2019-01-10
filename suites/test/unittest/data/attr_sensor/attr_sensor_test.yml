@@ -9,12 +9,22 @@ create experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -24,6 +34,7 @@ create snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -33,6 +44,7 @@ update threshold:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -44,6 +56,7 @@ update total:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -55,6 +68,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -69,6 +83,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -83,6 +98,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -97,6 +113,7 @@ create sensor4:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -111,6 +128,7 @@ create sensor5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor5
@@ -126,6 +144,7 @@ get attr_sensor without mid:
   message: Coming request is missing necessary fields
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -135,6 +154,7 @@ get attr_sensor sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -149,6 +169,7 @@ get attr_sensor c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor1
@@ -163,6 +184,7 @@ get attr_sensor sensor3:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor3
@@ -177,6 +199,7 @@ get attr_sensor c_sensor3:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor3
@@ -191,6 +214,7 @@ get attr_sensor sensor5:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor5
@@ -205,6 +229,7 @@ get attr_sensor c_sensor5:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor5
@@ -220,6 +245,7 @@ update attr_sensor without mid:
   message: Coming request is missing necessary fields
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -232,6 +258,7 @@ update attr_sensor with nothing:
   message: The coming put request has nothing to update
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -242,6 +269,7 @@ update attr_sensor sensor1 diag:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -254,6 +282,7 @@ update mearuable sensor1 old diag:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -266,6 +295,7 @@ get attr_sensor sensor1 after update:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -281,6 +311,7 @@ get attr_sensor pair without mid:
   message: Coming request is missing necessary fields
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor1
@@ -291,6 +322,7 @@ get attr_sensor pair sensro1 sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor1
@@ -305,6 +337,7 @@ get attr_sensor pair c_sensro1 c_sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor1
@@ -319,6 +352,7 @@ get attr_sensor pair sensro1 sensor2:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor1
@@ -333,6 +367,7 @@ get attr_sensor pair sensro2 sensor1:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor2
@@ -347,6 +382,7 @@ get attr_sensor pair sensro3 sensor3:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor3
@@ -361,6 +397,7 @@ get attr_sensor pair sensro4 c_sensor3:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor4
@@ -375,6 +412,7 @@ get attr_sensor pair c_sensro4 sensor5:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -389,6 +427,7 @@ delete c_sensor3:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: c_sensor3
@@ -399,6 +438,7 @@ get attr_sensor sensor1 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -414,6 +454,7 @@ get attr_sensor sensor3 after deletion:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor3
@@ -424,6 +465,7 @@ get attr_sensor sensor5 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor1
@@ -438,6 +480,7 @@ get attr_sensor c_sensor1 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor1
@@ -453,6 +496,7 @@ get attr_sensor c_sensor3 after deletion:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor3
@@ -463,6 +507,7 @@ get attr_sensor c_sensor5 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: c_sensor5
@@ -477,6 +522,7 @@ get attr_sensor pair sensor1 sensor1 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor1
@@ -491,6 +537,7 @@ get attr_sensor pair c_sensor1 c_sensor1 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor1
@@ -505,6 +552,7 @@ get attr_sensor pair sensor1 sensor2 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor1
@@ -519,6 +567,7 @@ get attr_sensor pair sensor2 sensor1 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor2
@@ -534,6 +583,7 @@ get attr_sensor pair sensor3 sensor3 after deletion:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor3
@@ -546,6 +596,7 @@ get attr_sensor pair sensor4 c_sensor3 after deletion:
   message: Cannot find the sensor id
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: sensor4
@@ -557,6 +608,7 @@ get attr_sensor pair c_sensor4 sensor5 after deletion:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -572,6 +624,7 @@ update attr_sensor pair without mid:
   message: Coming request is missing necessary fields
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -585,6 +638,7 @@ update meaurable pair with nothing:
   message: The coming put request has nothing to update
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -596,6 +650,7 @@ update meaurable pair c_sensor4 sensor5 w:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -609,6 +664,7 @@ update meaurable pair c_sensor4 sensor5 d:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -622,6 +678,7 @@ get attr_sensor pair c_sensor4 sensor5 after update:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor1: c_sensor4
@@ -636,6 +693,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 get attr_sensor after delete agent:
@@ -645,6 +703,7 @@ get attr_sensor after delete agent:
   message: "No Resource Error Caught: Cannot find object, agentId=test_agent"
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     attr_sensor_id: sensor1
@@ -656,9 +715,11 @@ delete experiment:
   message: Experiment=test_experiment is deleted
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
 
 tests:
   - create experiment
+  - create a bua
   - create agent
   - create snapshot
   - update threshold

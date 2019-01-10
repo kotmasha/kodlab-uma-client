@@ -8,12 +8,22 @@ create an experiment:
   data:
     experiment_id: test_experiment
 
+create a bua:
+  method: POST
+  url: /UMA/object/bua
+  status_code: 201
+  message: Bua=test_bua is created
+  data:
+    experiment_id: test_experiment
+    bua_id: test_bua
+
 create an agent:
   method: POST
   url: /UMA/object/agent
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     type: default
 
@@ -23,6 +33,7 @@ create an snapshot:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
 
@@ -32,6 +43,7 @@ update threshold:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -43,6 +55,7 @@ update total:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -54,6 +67,7 @@ create sensor0:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor0
@@ -68,6 +82,7 @@ create sensor1:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor1
@@ -82,6 +97,7 @@ create sensor2:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor2
@@ -96,6 +112,7 @@ create sensor3:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor3
@@ -110,6 +127,7 @@ create sensor4:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     sensor_id: sensor4
@@ -124,6 +142,7 @@ set observe:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -135,6 +154,7 @@ get observe:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -146,6 +166,7 @@ set current:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -157,6 +178,7 @@ get current:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -168,6 +190,7 @@ set target:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   data:
@@ -179,6 +202,7 @@ get target:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -190,6 +214,7 @@ npdirs:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -211,6 +236,7 @@ get npdirs:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -232,6 +258,7 @@ get weights:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -253,6 +280,7 @@ get dirs:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -274,6 +302,7 @@ get thresholds:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -290,6 +319,7 @@ get all:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -346,6 +376,7 @@ get data size:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -369,6 +400,7 @@ delay 0&2&5:
   status_code: 201
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
     delay_lists: [[True, False, True, False, False, True, False, False, False, False]]
@@ -380,6 +412,7 @@ get mask amper:
   status_code: 200
   query:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
     snapshot_id: test_snapshot
   kwargs:
@@ -397,6 +430,7 @@ delete agent:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
     agent_id: test_agent
 
 delete experiment:
@@ -405,10 +439,12 @@ delete experiment:
   status_code: 200
   data:
     experiment_id: test_experiment
+    bua_id: test_bua
   message: Experiment=test_experiment is deleted
 
 tests:
   - create an experiment
+  - create a bua
   - create an agent
   - create an snapshot
   - update threshold

@@ -9,35 +9,32 @@ create experiment:
   data:
     experiment_id: test_experiment
 
-create agent1:
+create bua1:
   method: POST
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 201
-  message: Agent=test_agent1 is created
+  message: Bua=test_bua1 is created
   data:
     experiment_id: test_experiment
-    agent_id: test_agent1
-    type: default
+    bua_id: test_bua1
 
-create agent2:
+create bua2:
   method: POST
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 201
-  message: Agent=test_agent2 is created
+  message: Bua=test_bua2 is created
   data:
     experiment_id: test_experiment
-    agent_id: test_agent2
-    type: default
+    bua_id: test_bua2
 
-create agent3:
+create bua3:
   method: POST
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 201
-  message: Agent=test_agent3 is created
+  message: Bua=test_bua3 is created
   data:
     experiment_id: test_experiment
-    agent_id: test_agent3
-    type: qualitative
+    bua_id: test_bua3
 
 get experiment:
   method: GET
@@ -47,37 +44,37 @@ get experiment:
   status_code: 200
   message: Get experiment info
   kwargs:
-    agent_ids:
-      - [test_agent1, Stationary]
-      - [test_agent2, Stationary]
-      - [test_agent3, Qualitative]
+    bua_ids:
+      - test_bua1
+      - test_bua2
+      - test_bua3
 
-delete agent1:
+delete bua1:
   method: DELETE
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 200
-  message: AgentId=test_agent1 is deleted
+  message: Bua=test_bua1 is deleted
   data:
     experiment_id: test_experiment
-    agent_id: test_agent1
+    bua_id: test_bua1
 
-delete agent2:
+delete bua2:
   method: DELETE
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 200
-  message: AgentId=test_agent2 is deleted
+  message: Bua=test_bua2 is deleted
   data:
     experiment_id: test_experiment
-    agent_id: test_agent2
+    bua_id: test_bua2
 
-delete agent3:
+delete bua3:
   method: DELETE
-  url: /UMA/object/agent
+  url: /UMA/object/bua
   status_code: 200
-  message: AgentId=test_agent3 is deleted
+  message: Bua=test_bua3 is deleted
   data:
     experiment_id: test_experiment
-    agent_id: test_agent3
+    bua_id: test_bua3
 
 get experiment after delete:
   method: GET
@@ -87,7 +84,7 @@ get experiment after delete:
   status_code: 200
   message: Get experiment info
   kwargs:
-    agent_ids: []
+    bua_ids: []
 
 delete experiment:
   method: DELETE
@@ -99,12 +96,12 @@ delete experiment:
 
 tests:
   - create experiment
-  - create agent1
-  - create agent2
-  - create agent3
+  - create bua1
+  - create bua2
+  - create bua3
   - get experiment
-  - delete agent1
-  - delete agent2
-  - delete agent3
+  - delete bua1
+  - delete bua2
+  - delete bua3
   - get experiment after delete
   - delete experiment
