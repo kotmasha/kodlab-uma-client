@@ -7,7 +7,7 @@ from cluster.cluster_setting import *
 def test_experiment_creation():
     start_uma()
     service =  UMARestService('localhost', '8000')
-    EX = Experiment('test_experiment', service)
+    EX = create_experiment('test_experiment', service)
     rest = UMAClientExperiment('test_experiment', service)
     assert rest.get_experiment_info() is not None
 
@@ -18,7 +18,7 @@ def test_experiment_creation():
 def test_agent_creation():
     start_uma()
     service =  UMARestService('localhost', '8000')
-    EX = Experiment('test_experiment', service)
+    EX = create_experiment('test_experiment', service)
 
     params_qualitative = {
         'type': 'qualitative',
@@ -80,7 +80,7 @@ def test_snapshot_creation_with_parameters():
 
     start_uma()
     service =  UMARestService('localhost', '8000')
-    EX = Experiment('test_experiment', service)
+    EX = create_experiment('test_experiment', service)
 
     params_qualitative = {
         'type': 'qualitative',

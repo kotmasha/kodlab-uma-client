@@ -239,6 +239,14 @@ class Experiment(object):
     def remove_experiment(self):
         UMAClientWorld(self._service).delete_experiment(self._EXPERIMENT_ID)
 
+    # This function is saving the current experiment, making sure to call this function before experiment is removed
+    def save_experiment(self):
+        UMAClientExperiment(self._EXPERIMENT_ID, self._service).save_experiment()
+
+    # This function is loading the experiment from disk
+    def load_experiment(self):
+        UMAClientExperiment(self._EXPERIMENT_ID, self._service).load_experiment()
+
     # The register function, just do id register.
     # If id is None, generate a new one, if not just add it
     # The function is NOT supposed to be used in any test file directly
@@ -520,8 +528,8 @@ class Snapshot(object):
         return None
 
     def init(self, params):
-        if params['type'] == 'default':
-            self._SNAPSHOT_SERVICE.set_q(params['discount'])
+        #if params['type'] == 'default':
+        self._SNAPSHOT_SERVICE.set_q(params['discount'])
 
         self._SNAPSHOT_SERVICE.set_auto_target(params['AutoTarg'])
 

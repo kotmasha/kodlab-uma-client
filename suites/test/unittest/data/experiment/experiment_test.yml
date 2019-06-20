@@ -56,7 +56,7 @@ delete agent1:
   method: DELETE
   url: /UMA/object/agent
   status_code: 200
-  message: Agent=test_agent1 is deleted
+  message: AgentId=test_agent1 is deleted
   data:
     experiment_id: test_experiment
     agent_id: test_agent1
@@ -65,7 +65,7 @@ delete agent2:
   method: DELETE
   url: /UMA/object/agent
   status_code: 200
-  message: Agent=test_agent2 is deleted
+  message: AgentId=test_agent2 is deleted
   data:
     experiment_id: test_experiment
     agent_id: test_agent2
@@ -74,7 +74,7 @@ delete agent3:
   method: DELETE
   url: /UMA/object/agent
   status_code: 200
-  message: Agent=test_agent3 is deleted
+  message: AgentId=test_agent3 is deleted
   data:
     experiment_id: test_experiment
     agent_id: test_agent3
