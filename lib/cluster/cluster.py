@@ -11,7 +11,7 @@ class YamlManager:
     def __init__(self, filename):
         try:
             with open(filename, 'r') as f:
-                self._dict = yaml.load(f)
+                self._dict = yaml.safe_load(f)
         except Exception as ex:
             print "Fatal error reading %s, please check the file, err=%s" % (filename, str(ex))
             exit(0)
@@ -43,25 +43,26 @@ class PoolManager:
         self._dict = YamlManager(os.path.join(UMA_SIM_HOME, 'lib', 'cluster', POOL_YML)).get_dict()
         self._Nprocesses = int(self._dict['Pool']['Nprocesses'])
 
-    def start(self, func, filename, Nruns, Ninstances, port, host):
+    def start(self, func, filename, Nruns, first_run, Ninstances, port, host):
         self.filename = filename
         self.instance = Ninstances
         self.Nruns = Nruns
+        self.first_run = first_run
         self.port = port
         self.host = host
 
-        n = 0
+        n = first_run
         pool = {}
         clk = time.time()
 
-        while n < Nruns:
+        while n < first_run+Nruns:
             for p in pool.keys():
                 if not pool[p].is_alive():
                     print "%s is done" % p
                     del pool[p]
 
             l = len(pool)
-            while l < self._Nprocesses and n < Nruns:
+            while l < self._Nprocesses and n < first_run+Nruns:
                 params = self.parameter_generator(n, filename, host, port)
                 #print params
                 kwargs = {'run_params': params}
